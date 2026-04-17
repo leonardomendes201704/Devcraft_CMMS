@@ -292,6 +292,11 @@ public static class KanbanTaskMappings
 {
     public static KanbanTaskResponse ToResponse(this KanbanTask task)
     {
+        var createdAtUtc = DateTime.SpecifyKind(task.CreatedAtUtc, DateTimeKind.Utc);
+        var closedAtUtc = task.ClosedAtUtc.HasValue
+            ? DateTime.SpecifyKind(task.ClosedAtUtc.Value, DateTimeKind.Utc)
+            : (DateTime?)null;
+
         return new KanbanTaskResponse(
             task.Id,
             task.Title,
@@ -302,8 +307,8 @@ public static class KanbanTaskMappings
             task.EstimateHours,
             task.SpentHours,
             task.Status,
-            task.CreatedAtUtc,
-            task.ClosedAtUtc,
+            createdAtUtc,
+            closedAtUtc,
             task.TotalSpentHoursOnClose,
             task.TotalLeadTimeHoursOnClose);
     }

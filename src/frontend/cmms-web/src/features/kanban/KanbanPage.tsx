@@ -381,11 +381,11 @@ export function KanbanPage() {
                 <span className="font-medium text-slate-700">Assignee:</span> {selectedTask.assignee}
               </p>
               <p>
-                <span className="font-medium text-slate-700">Created (UTC):</span> {new Date(selectedTask.createdAtUtc).toISOString()}
+                <span className="font-medium text-slate-700">Created (UTC):</span> {formatUtcTimestamp(selectedTask.createdAtUtc)}
               </p>
               <p>
                 <span className="font-medium text-slate-700">Closed (UTC):</span>{' '}
-                {selectedTask.closedAtUtc ? new Date(selectedTask.closedAtUtc).toISOString() : '-'}
+                {selectedTask.closedAtUtc ? formatUtcTimestamp(selectedTask.closedAtUtc) : '-'}
               </p>
               <p>
                 <span className="font-medium text-slate-700">Closed Spent:</span>{' '}
@@ -459,4 +459,15 @@ function ModalMetric({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
+}
+
+function formatUtcTimestamp(value: string): string {
+  // Legacy SQLite rows may not include timezone suffix. Treat them as UTC.
+  const normalized = /([zZ]|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`
+  const date = new Date(normalized)
+  if (Number.isNaN(date.getTime())) {
+    return value
+  }
+
+  return date.toISOString()
 }

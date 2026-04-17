@@ -16,6 +16,7 @@
 | TASK-REQ-2026-04-17-06 | Configurar ambiente Docker com PostgreSQL e migrar dados do fallback | active | high | Kanban API task: `e7235369-c8e8-42e7-a5b6-85b765205b75` |
 | TASK-REQ-2026-04-17-07 | Hardening: exigir apontamento de esforco antes de fechar task | closed | high | Kanban API task: `ccdc0477-4c33-49aa-b04a-ba4dcfefa6e9`, spent final: `1.2h` |
 | TASK-REQ-2026-04-17-08 | Diretriz operacional: start local + active e entrega com close + tempo gasto, mantendo app rodando | closed | high | Kanban API task: `03c5c86f-e514-4f70-abea-ce2ecae1f7f2`, start: `2026-04-17 12:01:09 -03:00`, end: `2026-04-17 12:02:16 -03:00`, spent final: `0.1h` |
+| TASK-REQ-2026-04-17-09 | Corrigir fuso horario UTC no modal do Kanban (Created/Closed) | closed | high | Kanban API task: `49291097-2fa1-4c19-a176-6bf281362fb9`, start: `2026-04-17 12:07:18 -03:00`, end: `2026-04-17 12:07:20 -03:00`, spent final: `0.4h` |
 
 ## Transition Log
 
@@ -36,6 +37,9 @@
 | TASK-REQ-2026-04-17-08 | new -> active | 2026-04-17 12:01:09 -03:00 (LOCAL) | Solicitacao recebida e task iniciada com timestamp local conforme diretriz |
 | TASK-REQ-2026-04-17-08 | active -> resolved | 2026-04-17 12:02:16 -03:00 (LOCAL) | Diretriz formalizada no repositorio e checklist aplicado |
 | TASK-REQ-2026-04-17-08 | resolved -> closed | 2026-04-17 12:02:16 -03:00 (LOCAL) | Task fechada com `spentHours` calculado (`0.1h`) |
+| TASK-REQ-2026-04-17-09 | new -> active | 2026-04-17 12:07:18 -03:00 (LOCAL) | Solicitacao de ajuste de timezone recebida e task iniciada |
+| TASK-REQ-2026-04-17-09 | active -> resolved | 2026-04-17 12:07:20 -03:00 (LOCAL) | Backend/frontend ajustados para serializacao e parsing UTC corretos |
+| TASK-REQ-2026-04-17-09 | resolved -> closed | 2026-04-17 12:07:20 -03:00 (LOCAL) | Task Kanban fechada com `spentHours` final `0.4h` |
 
 ## Baseline Done
 
