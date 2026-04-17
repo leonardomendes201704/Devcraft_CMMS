@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
-import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type TaskStatus, type TaskType } from './types'
+import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskStatus, type TaskType } from './types'
 
 export function KanbanPage() {
   const queryClient = useQueryClient()
@@ -68,6 +68,15 @@ export function KanbanPage() {
   }, [tasks])
 
   function updateTaskStatusById(taskId: string, status: TaskStatus) {
+    const task = tasks.find((item) => item.id === taskId)
+    if (!task) {
+      return
+    }
+
+    if (!isAllowedTransition(task.status, status)) {
+      return
+    }
+
     if (status === 'closed') {
       completeMutation.mutate({ taskId })
       return
@@ -250,7 +259,7 @@ export function KanbanPage() {
                         value={task.status}
                         onChange={(event) => updateTaskStatusById(task.id, event.target.value as TaskStatus)}
                       >
-                        {taskStatusOrder.map((value) => (
+                        {getSelectableStatuses(task).map((value) => (
                           <option key={value} value={value}>
                             {taskStatusLabel[value]}
                           </option>
@@ -326,6 +335,42 @@ export function KanbanPage() {
       ) : null}
     </main>
   )
+}
+
+function getSelectableStatuses(task: KanbanTask): TaskStatus[] {
+  if (task.status === 'new') {
+    return ['new', 'active']
+  }
+
+  if (task.status === 'active') {
+    return ['active', 'resolved']
+  }
+
+  if (task.status === 'resolved') {
+    return ['resolved', 'active', 'closed']
+  }
+
+  return ['closed']
+}
+
+function isAllowedTransition(current: TaskStatus, next: TaskStatus): boolean {
+  if (current === next) {
+    return true
+  }
+
+  if (current === 'new' && next === 'active') {
+    return true
+  }
+
+  if (current === 'active' && next === 'resolved') {
+    return true
+  }
+
+  if (current === 'resolved' && (next === 'active' || next === 'closed')) {
+    return true
+  }
+
+  return false
 }
 
 function MetricCard({ label, value }: { label: string; value: string }) {

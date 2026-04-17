@@ -79,6 +79,11 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
         }
 
         var previousStatus = task.Status;
+        if (!IsAllowedStatusTransition(previousStatus, request.Status))
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(request.Status), $"Transition from '{previousStatus}' to '{request.Status}' is not allowed."));
+        }
+
         task.Status = request.Status;
 
         _dbContext.KanbanTaskAuditLogs.Add(new KanbanTaskAuditLog
@@ -138,6 +143,16 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
             return NotFound();
         }
 
+        if (task.Status == KanbanTaskStatus.Closed)
+        {
+            return Ok(task.ToResponse());
+        }
+
+        if (task.Status != KanbanTaskStatus.Resolved)
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(task.Status), "Task can only be completed when status is 'resolved'."));
+        }
+
         if (request?.SpentHours is decimal spentHours)
         {
             var previousSpent = task.SpentHours;
@@ -156,35 +171,32 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
             }
         }
 
-        if (task.Status != KanbanTaskStatus.Closed)
+        var previousStatus = task.Status;
+        var closedAtUtc = DateTime.UtcNow;
+        var leadTimeHours = Math.Round((decimal)(closedAtUtc - task.CreatedAtUtc).TotalHours, 2);
+
+        task.Status = KanbanTaskStatus.Closed;
+        task.ClosedAtUtc = closedAtUtc;
+        task.TotalSpentHoursOnClose = task.SpentHours;
+        task.TotalLeadTimeHoursOnClose = leadTimeHours;
+
+        _dbContext.KanbanTaskAuditLogs.Add(new KanbanTaskAuditLog
         {
-            var previousStatus = task.Status;
-            var closedAtUtc = DateTime.UtcNow;
-            var leadTimeHours = Math.Round((decimal)(closedAtUtc - task.CreatedAtUtc).TotalHours, 2);
+            KanbanTaskId = task.Id,
+            EventType = "status_changed",
+            FromStatus = previousStatus,
+            ToStatus = task.Status
+        });
 
-            task.Status = KanbanTaskStatus.Closed;
-            task.ClosedAtUtc = closedAtUtc;
-            task.TotalSpentHoursOnClose = task.SpentHours;
-            task.TotalLeadTimeHoursOnClose = leadTimeHours;
-
-            _dbContext.KanbanTaskAuditLogs.Add(new KanbanTaskAuditLog
-            {
-                KanbanTaskId = task.Id,
-                EventType = "status_changed",
-                FromStatus = previousStatus,
-                ToStatus = task.Status
-            });
-
-            _dbContext.KanbanTaskAuditLogs.Add(new KanbanTaskAuditLog
-            {
-                KanbanTaskId = task.Id,
-                EventType = "task_completed",
-                FromStatus = previousStatus,
-                ToStatus = KanbanTaskStatus.Closed,
-                TotalSpentHoursAtClose = task.TotalSpentHoursOnClose,
-                TotalLeadTimeHoursAtClose = task.TotalLeadTimeHoursOnClose
-            });
-        }
+        _dbContext.KanbanTaskAuditLogs.Add(new KanbanTaskAuditLog
+        {
+            KanbanTaskId = task.Id,
+            EventType = "task_completed",
+            FromStatus = previousStatus,
+            ToStatus = KanbanTaskStatus.Closed,
+            TotalSpentHoursAtClose = task.TotalSpentHoursOnClose,
+            TotalLeadTimeHoursAtClose = task.TotalLeadTimeHoursOnClose
+        });
 
         await _dbContext.SaveChangesAsync(cancellationToken);
         return Ok(task.ToResponse());
@@ -206,6 +218,17 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
         {
             [field] = [message]
         });
+    }
+
+    private static bool IsAllowedStatusTransition(string current, string next)
+    {
+        return (current, next) switch
+        {
+            (KanbanTaskStatus.New, KanbanTaskStatus.Active) => true,
+            (KanbanTaskStatus.Active, KanbanTaskStatus.Resolved) => true,
+            (KanbanTaskStatus.Resolved, KanbanTaskStatus.Active) => true,
+            _ => false
+        };
     }
 }
 
