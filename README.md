@@ -59,6 +59,17 @@ For tenant-protected endpoints, send header:
 
 - Phase 1 (Foundation): in progress
 
+## Changelog Policy (Mandatory)
+
+- Any impactful change (`src/`, `tests/`, `tools/`, workflows, solution/project files) must update `CHANGELOG.md` in the same commit.
+- CI blocks push/PR when impactful files change without changelog update.
+
+Enable local pre-commit guard:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/install-git-hooks.ps1
+```
+
 ## Next Milestones
 
 - Seed + first migrations

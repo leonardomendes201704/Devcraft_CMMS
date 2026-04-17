@@ -43,3 +43,9 @@ Registrar no `management/kanban/board.md`:
 - horario local de inicio/fim
 - tempo gasto final
 - evidencias de validacao
+
+## Changelog Guard (Mandatory)
+
+1. Todo commit com alteracao impactante deve incluir atualizacao no `CHANGELOG.md`.
+2. Push/PR sem changelog atualizado deve falhar no CI (`changelog-guard`).
+3. Desenvolvedor deve manter hook local ativo (`.githooks/pre-commit`) para bloquear commit defasado.
