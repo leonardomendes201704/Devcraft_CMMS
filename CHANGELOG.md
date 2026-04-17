@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.8-playwright-step-evidence] - 2026-04-17
+
+### Added
+- Added shared Playwright evidence helper to capture and attach step-by-step screenshots to Kanban tasks.
+- Added standardized step evidence naming for title and file path:
+  - `Step NN - <step name>`
+  - `task-<taskId>-pw-step-<NN>-<slug>-<timestamp>.png`
+
+### Changed
+- Refactored frontend E2E specs to use 6-8 evidence steps per flow instead of single-screenshot evidence.
+- Frontend E2E tests now close their own evidence tasks after status lifecycle updates and effort assignment.
+- Kept API-only validation test on JSON evidence flow without screenshot requirements.
+
 ## [0.1.7-modal-scroll] - 2026-04-17
 
 ### Changed

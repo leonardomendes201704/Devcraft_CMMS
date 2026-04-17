@@ -1,36 +1,37 @@
-import fs from 'node:fs/promises'
-import path from 'node:path'
 import { expect, test } from '@playwright/test'
+import {
+  captureAndAttachStepEvidence,
+  closeTaskWithSpentHours,
+  createAuthContext,
+  createFrontendEvidenceTask,
+  getTaskById,
+} from './support/evidence'
 
 test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   const taskTitle = `Validacao E2E Kanban ${Date.now()}`
-  const tenantId = '11111111-1111-1111-1111-111111111111'
-  const apiBaseUrl = 'http://localhost:8117'
-  const loginResponse = await request.post(`${apiBaseUrl}/api/auth/login`, {
-    headers: {
-      'X-Tenant-Id': tenantId,
-      'Content-Type': 'application/json',
-    },
-    data: {
-      email: 'admin@cmms.local',
-      password: 'Naotemsenha0(',
-    },
-  })
-  expect(loginResponse.ok()).toBeTruthy()
-  const loginResult = (await loginResponse.json()) as { accessToken: string }
-  const authHeaders = {
-    Authorization: `Bearer ${loginResult.accessToken}`,
-    'X-Tenant-Id': tenantId,
-    'Content-Type': 'application/json',
-  }
+  const authContext = await createAuthContext(request)
+  const evidenceTask = await createFrontendEvidenceTask(
+    request,
+    authContext,
+    `[TASK] Playwright kanban step evidence ${Date.now()}`,
+    'Captura passo a passo do fluxo Kanban com criacao e validacao de task.',
+  )
 
   await page.goto('/login')
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 1, 'open login page')
+
   await page.getByLabel('Email').fill('admin@cmms.local')
   await page.getByLabel('Password').fill('Naotemsenha0(')
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 2, 'credentials filled')
+
   await page.getByRole('button', { name: 'Sign in' }).click()
   await expect(page.getByRole('heading', { name: 'Devcraft CMMS - Kanban' })).toBeVisible()
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 3, 'kanban loaded')
+
   await page.getByRole('button', { name: 'View changelog' }).click()
   await expect(page.getByRole('heading', { name: 'Project Changelog' })).toBeVisible()
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 4, 'changelog modal opened')
+
   await page.getByRole('button', { name: 'Close' }).first().click()
 
   const tasksMetricValue = page
@@ -47,73 +48,41 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   await page.getByPlaceholder('Task description').fill('Criada por teste Playwright para evidenciar fluxo.')
   await page.getByRole('textbox', { name: 'Module', exact: true }).fill('QA')
   await page.locator('form input[type="number"]').fill('3')
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 5, 'new task form filled')
+
   await page.getByRole('button', { name: 'Add task' }).click()
 
   await expect(page.getByRole('heading', { name: taskTitle })).toBeVisible()
   await expect(tasksMetricValue).not.toHaveText(beforeText)
-
-  const screenshotPath = testInfo.outputPath('kanban-after-create.png')
-  await page.screenshot({ path: screenshotPath, fullPage: true })
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 6, 'task created and visible')
 
   const afterText = await tasksMetricValue.innerText()
   const after = Number.parseInt(afterText, 10)
   expect(after).toBeGreaterThanOrEqual(before + 1)
 
-  const listResponse = await request.get(`${apiBaseUrl}/api/tasks`, {
-    headers: authHeaders,
+  const listResponse = await request.get('http://localhost:8117/api/tasks', {
+    headers: authContext.authHeaders,
   })
   expect(listResponse.ok()).toBeTruthy()
 
-  const tasks = (await listResponse.json()) as Array<{ id: string; title: string }>
+  const tasks = (await listResponse.json()) as Array<{ id: string; title: string; status: string }>
   const createdTask = tasks.find((task) => task.title === taskTitle)
   expect(createdTask).toBeDefined()
 
-  const taskId = createdTask!.id
-  const evidenceFileName = `task-${taskId}-playwright-${Date.now()}.png`
-  const evidenceDirectory = path.resolve(testInfo.config.rootDir, '../../../src/frontend/cmms-web/public/evidences')
-  const evidenceAbsolutePath = path.join(evidenceDirectory, evidenceFileName)
-  const evidencePublicUrl = `/evidences/${evidenceFileName}`
+  await page.getByRole('heading', { name: taskTitle }).click()
+  await expect(page.getByRole('heading', { name: 'Evidence', exact: true })).toBeVisible()
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 7, 'task details modal opened')
 
-  await fs.mkdir(evidenceDirectory, { recursive: true })
-  await fs.copyFile(screenshotPath, evidenceAbsolutePath)
+  await page.getByRole('button', { name: 'Close' }).first().click()
+  await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 8, 'flow completed with modal closed')
 
-  const addEvidence = await request.post(`${apiBaseUrl}/api/tasks/${taskId}/evidences`, {
-    headers: authHeaders,
-    data: {
-      title: 'Playwright - Kanban after create',
-      imageUrl: evidencePublicUrl,
-      source: 'playwright',
-      capturedAtUtc: new Date().toISOString(),
-    },
-  })
-  expect(addEvidence.ok()).toBeTruthy()
+  await closeTaskWithSpentHours(request, evidenceTask, 0.8)
+  const evidenceTaskData = await getTaskById(request, authContext, evidenceTask.taskId)
+  const stepEvidenceTitles = (evidenceTaskData.evidences ?? []).map((evidence) => evidence.title)
 
-  const toActive = await request.patch(`${apiBaseUrl}/api/tasks/${taskId}/status`, {
-    headers: authHeaders,
-    data: { status: 'active' },
-  })
-  expect(toActive.ok()).toBeTruthy()
-
-  const toResolved = await request.patch(`${apiBaseUrl}/api/tasks/${taskId}/status`, {
-    headers: authHeaders,
-    data: { status: 'resolved' },
-  })
-  expect(toResolved.ok()).toBeTruthy()
-
-  const setEffort = await request.patch(`${apiBaseUrl}/api/tasks/${taskId}/effort`, {
-    headers: authHeaders,
-    data: { spentHours: 0.5 },
-  })
-  expect(setEffort.ok()).toBeTruthy()
-
-  const closeTask = await request.post(`${apiBaseUrl}/api/tasks/${taskId}/complete`, {
-    headers: authHeaders,
-    data: { spentHours: 0.5 },
-  })
-  expect(closeTask.ok()).toBeTruthy()
-
-  const closedTask = (await closeTask.json()) as { evidences?: Array<{ imageUrl: string }> }
-  expect(closedTask.evidences?.some((evidence) => evidence.imageUrl === evidencePublicUrl)).toBeTruthy()
+  expect(stepEvidenceTitles.some((title) => title.startsWith('Step 01'))).toBeTruthy()
+  expect(stepEvidenceTitles.some((title) => title.startsWith('Step 08'))).toBeTruthy()
+  expect(stepEvidenceTitles.filter((title) => title.startsWith('Step ')).length).toBeGreaterThanOrEqual(8)
 })
 
 test('cannot close frontend/api task without required evidences', async ({ request }) => {
