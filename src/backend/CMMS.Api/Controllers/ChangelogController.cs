@@ -1,4 +1,6 @@
 using CMMS.Infrastructure.Persistence;
+using CMMS.Domain.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,6 +8,7 @@ namespace CMMS.Api.Controllers;
 
 [ApiController]
 [Route("api/changelog")]
+[Authorize(Policy = AuthorizationPolicies.AdminMasterOnly)]
 public sealed class ChangelogController(AppDbContext dbContext) : ControllerBase
 {
     private readonly AppDbContext _dbContext = dbContext;

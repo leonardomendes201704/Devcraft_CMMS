@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.9-auth-policy-hardening] - 2026-04-17
+
+### Added
+- Added auth domain baseline entities and policy primitives:
+  - `AuthUser` domain entity (`auth_users` table with tenant isolation and unique tenant+email)
+  - `AuthRoles` constants and allowed role set
+  - `AuthorizationPolicies` constants
+  - `CredentialPolicy` password validation rules
+- Added startup schema bootstrap for `auth_users` in both SQLite and PostgreSQL environments.
+
+### Changed
+- Enforced `AdminMasterOnly` authorization policy on protected controllers (`tasks`, `bootstrap`, `changelog`).
+- Updated login controller to emit role claims using centralized auth role constants.
+- Added master admin password policy validation guard during login.
+
 ## [0.1.8-playwright-step-evidence] - 2026-04-17
 
 ### Added

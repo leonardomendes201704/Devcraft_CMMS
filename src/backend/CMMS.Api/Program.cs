@@ -1,5 +1,6 @@
 using CMMS.Api.Tenancy;
 using CMMS.Application;
+using CMMS.Domain.Auth;
 using CMMS.Domain.Project;
 using CMMS.Infrastructure;
 using CMMS.Infrastructure.Persistence;
@@ -53,7 +54,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthorizationPolicies.AdminMasterOnly, policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole(AuthRoles.AdminMaster);
+    });
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -91,6 +99,7 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+    await EnsureAuthSchemaAsync(dbContext);
     await EnsureKanbanEvidenceSchemaAsync(dbContext);
     await EnsureProjectChangelogSchemaAsync(dbContext);
     await SyncProjectChangelogFromFileAsync(dbContext, app.Environment.ContentRootPath);
@@ -112,6 +121,56 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", utcNow = DateTi
 app.MapControllers();
 
 app.Run();
+
+static async Task EnsureAuthSchemaAsync(AppDbContext dbContext)
+{
+    var providerName = dbContext.Database.ProviderName ?? string.Empty;
+
+    if (providerName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS auth_users (
+              "Id" TEXT NOT NULL CONSTRAINT "PK_auth_users" PRIMARY KEY,
+              "TenantId" TEXT NOT NULL,
+              "Email" TEXT NOT NULL,
+              "PasswordHash" TEXT NOT NULL,
+              "Role" TEXT NOT NULL,
+              "IsActive" INTEGER NOT NULL,
+              "CreatedAtUtc" TEXT NOT NULL,
+              "UpdatedAtUtc" TEXT NULL
+            );
+            """);
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_auth_users_tenant_email
+            ON auth_users ("TenantId","Email");
+            """);
+        return;
+    }
+
+    if (providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE TABLE IF NOT EXISTS auth_users (
+              "Id" uuid NOT NULL PRIMARY KEY,
+              "TenantId" uuid NOT NULL,
+              "Email" character varying(256) NOT NULL,
+              "PasswordHash" character varying(512) NOT NULL,
+              "Role" character varying(64) NOT NULL,
+              "IsActive" boolean NOT NULL,
+              "CreatedAtUtc" timestamp with time zone NOT NULL,
+              "UpdatedAtUtc" timestamp with time zone NULL
+            );
+            """);
+        await dbContext.Database.ExecuteSqlRawAsync(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS "IX_auth_users_tenant_email"
+            ON auth_users ("TenantId","Email");
+            """);
+    }
+}
 
 static async Task EnsureKanbanEvidenceSchemaAsync(AppDbContext dbContext)
 {

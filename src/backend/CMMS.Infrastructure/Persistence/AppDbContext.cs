@@ -1,4 +1,5 @@
 using CMMS.Domain.Common;
+using CMMS.Domain.Auth;
 using CMMS.Domain.Project;
 using CMMS.Domain.Tasks;
 using CMMS.Domain.WorkOrders;
@@ -12,6 +13,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     private readonly ICurrentTenant _currentTenant = currentTenant;
 
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
+    public DbSet<AuthUser> AuthUsers => Set<AuthUser>();
     public DbSet<ProjectChangelogEntry> ProjectChangelogEntries => Set<ProjectChangelogEntry>();
     public DbSet<KanbanTask> KanbanTasks => Set<KanbanTask>();
     public DbSet<KanbanTaskAuditLog> KanbanTaskAuditLogs => Set<KanbanTaskAuditLog>();
@@ -28,6 +30,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             entity.Property(x => x.Title).HasMaxLength(256).IsRequired();
             entity.Property(x => x.Status).HasMaxLength(64).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+            entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
+        });
+
+        modelBuilder.Entity<AuthUser>(entity =>
+        {
+            entity.ToTable("auth_users");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Email).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.PasswordHash).HasMaxLength(512).IsRequired();
+            entity.Property(x => x.Role).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.IsActive).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.Email }).IsUnique();
             entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
         });
 

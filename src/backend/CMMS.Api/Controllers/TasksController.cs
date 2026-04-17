@@ -1,4 +1,5 @@
 using CMMS.Domain.Tasks;
+using CMMS.Domain.Auth;
 using CMMS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ namespace CMMS.Api.Controllers;
 
 [ApiController]
 [Route("api/tasks")]
-[Authorize]
+[Authorize(Policy = AuthorizationPolicies.AdminMasterOnly)]
 public sealed class TasksController(AppDbContext dbContext) : ControllerBase
 {
     private readonly AppDbContext _dbContext = dbContext;
