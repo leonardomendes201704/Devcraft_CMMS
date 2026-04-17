@@ -641,10 +641,10 @@ export function KanbanPage() {
               Previous
             </button>
 
-            <figure className="max-h-[90vh] flex-1">
+            <figure className="max-h-[90vh] flex flex-1 flex-col items-center justify-center">
               <img
                 alt={lightboxEvidence.title}
-                className="max-h-[82vh] w-auto max-w-full rounded-lg object-contain shadow-2xl"
+                className="mx-auto block max-h-[82vh] w-auto max-w-full rounded-lg object-contain shadow-2xl"
                 src={resolveEvidenceUrl(lightboxEvidence.imageUrl)}
               />
               <figcaption className="mt-2 text-center text-sm text-slate-100">

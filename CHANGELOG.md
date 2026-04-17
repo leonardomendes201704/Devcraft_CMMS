@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.12-lightbox-portrait-centering] - 2026-04-17
+
+### Changed
+- Fixed lightbox alignment for tall portrait evidences by centering the figure container and image block.
+- Portrait screenshots now stay visually centered in the overlay while preserving previous/next navigation controls.
+
 ## [0.1.11-evidence-order-lightbox-navigation] - 2026-04-17
 
 ### Changed
