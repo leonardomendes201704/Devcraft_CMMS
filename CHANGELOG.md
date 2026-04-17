@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.20-task-lifecycle-skill] - 2026-04-17
+
+### Added
+- Added project-scoped Cursor skill `.cursor/skills/devcraft-task-lifecycle/` to automate the mandatory Kanban task lifecycle (new -> active -> resolved -> closed). PowerShell entry point `scripts/task.ps1` with subcommands `login`, `new`, `start`, `resolve`, `close`, `evidence`, `show`. Enforces evidence naming convention, posts image + api evidences via `/api/tasks/:id/evidences`, and auto-restarts `devcraft_cmms_web` on close when image evidences were added (workaround for Vite public-dir scan issue). Reference payload schemas in `reference.md`.
+- Kanban task: `fee041b7-5ad0-43e9-982a-722cfd5aeb06`, start: `2026-04-17 20:10:55 -03:00`, end: `2026-04-17 20:12:46 -03:00`, spent final: `1.4h`. Evidences: image (`task-fee041b7-...-pw-step-01-...png`) and api (POST /api/tasks response).
+
+### Changed
+- Updated `guidelines/commands/README.md` to require task automation via `& .cursor/skills/devcraft-task-lifecycle/scripts/task.ps1` (never `powershell -File`).
+- Updated `guidelines/lessons-learned/known-issues.md` with the Vite public-dir scan issue and the `powershell -File` JSON mangling issue.
+- Documented `LL-009` (Vite public-dir discovery) and `LL-010` (PowerShell `-File` JSON argument mangling) in `guidelines/lessons-learned/lessons-learned.md`.
+
 ## [0.1.19-users-list-ui-kit-componentization] - 2026-04-17
 
 ### Added
@@ -12,6 +23,7 @@
 - Added generic list state hook `useListState<TSortKey, TFilters>` under `shared/hooks` for search/filter/sort/pagination state.
 
 ### Changed
+- Shortened shell sidebar menu labels and page headers (removed “Administracao de …” / “… administration” prefixes in i18n + `UsersListPage`, `DepartmentsListPage`, `JobsListPage` titles). Kanban task: `0a6124e6-2353-46a9-99b4-1cc3f1a47c2f`, start: `2026-04-17 20:00:21 -03:00`, end: `2026-04-17 20:00:38 -03:00`, spent final: `0.3h`. Playwright regression spec: `tests/cmms-web.playwright/tests/shell-menu-labels.spec.ts`.
 - Refactored Users Administration list page to consume shared list kit components.
 - Replaced page-local sort icon implementations with shared `SortIcon`.
 - Reduced `UsersListPage` coupling by keeping only domain-specific filter/sort/render rules.

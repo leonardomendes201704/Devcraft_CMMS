@@ -14,3 +14,5 @@
 
 - In this environment, full-solution test/build can intermittently fail with OutOfMemory in SDK 10 tooling.
 - Prefer project-level build/test execution until the SDK issue is stabilized.
+- On Windows PowerShell, run `bash` scripts via full path: `"C:\Program Files\Git\bin\bash.exe" scripts/check-changelog.sh --working-tree`. The default `bash` resolves to a WSL shim that fails without a configured distro (see LL-008).
+- Task lifecycle (new -> active -> resolved -> closed) must go through `.cursor/skills/devcraft-task-lifecycle/`. Invoke with `& .cursor/skills/devcraft-task-lifecycle/scripts/task.ps1 <subcommand>` (never `powershell -File` - see LL-010). Full usage in the skill's `SKILL.md`.
