@@ -1,0 +1,47 @@
+﻿services:
+  db:
+    image: postgres:16-alpine
+    container_name: devcraft_cmms_db
+    environment:
+      POSTGRES_DB: devcraft_cmms
+      POSTGRES_USER: devcraft
+      POSTGRES_PASSWORD: devcraft
+    ports:
+      - "5432:5432"
+    volumes:
+      - devcraft_cmms_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devcraft -d devcraft_cmms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: src/backend/CMMS.Api/Dockerfile
+    container_name: devcraft_cmms_api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=devcraft_cmms;Username=devcraft;Password=devcraft
+    ports:
+      - "8080:8080"
+
+  web:
+    image: node:24-alpine
+    container_name: devcraft_cmms_web
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host"
+    volumes:
+      - ./src/frontend/cmms-web:/app
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+
+volumes:
+  devcraft_cmms_pgdata:

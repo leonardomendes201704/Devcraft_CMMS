@@ -1,0 +1,338 @@
+import { useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
+import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type TaskStatus, type TaskType } from './types'
+
+export function KanbanPage() {
+  const queryClient = useQueryClient()
+  const tasksQuery = useQuery({
+    queryKey: ['kanban-tasks'],
+    queryFn: listTasks,
+  })
+
+  const tasks = tasksQuery.data ?? []
+  const [search, setSearch] = useState('')
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newDescription, setNewDescription] = useState('')
+  const [newType, setNewType] = useState<TaskType>('feature')
+  const [newModule, setNewModule] = useState('General')
+  const [newEstimate, setNewEstimate] = useState(2)
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null)
+
+  const refreshTasks = () => queryClient.invalidateQueries({ queryKey: ['kanban-tasks'] })
+
+  const createTaskMutation = useMutation({
+    mutationFn: createTask,
+    onSuccess: refreshTasks,
+  })
+
+  const statusMutation = useMutation({
+    mutationFn: ({ taskId, status }: { taskId: string; status: Exclude<TaskStatus, 'closed'> }) => updateTaskStatus(taskId, status),
+    onSuccess: refreshTasks,
+  })
+
+  const effortMutation = useMutation({
+    mutationFn: ({ taskId, spentHours }: { taskId: string; spentHours: number }) => updateTaskEffort(taskId, spentHours),
+    onSuccess: refreshTasks,
+  })
+
+  const completeMutation = useMutation({
+    mutationFn: ({ taskId }: { taskId: string }) => completeTask(taskId),
+    onSuccess: refreshTasks,
+  })
+
+  const filteredTasks = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) {
+      return tasks
+    }
+
+    return tasks.filter((task) =>
+      [task.id, task.title, task.description, task.module, task.assignee, task.type].join(' ').toLowerCase().includes(term),
+    )
+  }, [search, tasks])
+
+  const totals = useMemo(() => {
+    const estimate = tasks.reduce((acc, task) => acc + task.estimateHours, 0)
+    const spent = tasks.reduce((acc, task) => acc + task.spentHours, 0)
+    const completedSpent = tasks.filter((task) => task.status === 'closed').reduce((acc, task) => acc + task.spentHours, 0)
+
+    return {
+      estimate,
+      spent,
+      completedSpent,
+      count: tasks.length,
+    }
+  }, [tasks])
+
+  function updateTaskStatusById(taskId: string, status: TaskStatus) {
+    if (status === 'closed') {
+      completeMutation.mutate({ taskId })
+      return
+    }
+
+    statusMutation.mutate({ taskId, status })
+  }
+
+  function updateSpentHours(taskId: string, spentHours: number) {
+    const normalized = Number.isFinite(spentHours) ? Math.max(0, spentHours) : 0
+    effortMutation.mutate({ taskId, spentHours: normalized })
+  }
+
+  function handleCreateTask(event: FormEvent) {
+    event.preventDefault()
+
+    const title = newTitle.trim()
+    const description = newDescription.trim()
+    const moduleName = newModule.trim()
+    if (!title || !description || !moduleName) {
+      return
+    }
+
+    createTaskMutation.mutate(
+      {
+        title,
+        description,
+        type: newType,
+        module: moduleName,
+        assignee: 'Unassigned',
+        estimateHours: Math.max(0.5, newEstimate),
+      },
+      {
+        onSuccess: () => {
+          setNewTitle('')
+          setNewDescription('')
+          setNewEstimate(2)
+          setNewType('feature')
+          setNewModule('General')
+          setIsCreateModalOpen(false)
+        },
+      },
+    )
+  }
+
+  const isSaving = createTaskMutation.isPending || statusMutation.isPending || effortMutation.isPending || completeMutation.isPending
+
+  const columnStyleByStatus: Record<TaskStatus, { column: string; header: string; card: string; badge: string; input: string }> = {
+    new: {
+      column: 'border-rose-200 bg-rose-100',
+      header: 'bg-rose-200 text-rose-900',
+      card: 'border-rose-300 bg-rose-200',
+      badge: 'bg-rose-300 text-rose-900',
+      input: 'border-rose-300 bg-rose-100',
+    },
+    active: {
+      column: 'border-amber-200 bg-amber-100',
+      header: 'bg-amber-200 text-amber-900',
+      card: 'border-amber-300 bg-amber-200',
+      badge: 'bg-amber-300 text-amber-900',
+      input: 'border-amber-300 bg-amber-100',
+    },
+    resolved: {
+      column: 'border-sky-200 bg-sky-100',
+      header: 'bg-sky-200 text-sky-900',
+      card: 'border-sky-300 bg-sky-200',
+      badge: 'bg-sky-300 text-sky-900',
+      input: 'border-sky-300 bg-sky-100',
+    },
+    closed: {
+      column: 'border-emerald-200 bg-emerald-100',
+      header: 'bg-emerald-200 text-emerald-900',
+      card: 'border-emerald-300 bg-emerald-200',
+      badge: 'bg-emerald-300 text-emerald-900',
+      input: 'border-emerald-300 bg-emerald-100',
+    },
+  }
+
+  return (
+    <main className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,#fffef6_0%,#f8fbff_52%,#eff4ff_100%)] text-slate-900">
+      <section className="mx-auto max-w-[1500px] px-6 py-8">
+        <header className="mb-6 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-lg shadow-slate-200/70 backdrop-blur">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-sky-700">Operational Board</p>
+              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Devcraft CMMS - Kanban</h1>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+              <MetricCard label="Tasks" value={String(totals.count)} />
+              <MetricCard label="Estimate (h)" value={totals.estimate.toFixed(1)} />
+              <MetricCard label="Spent (h)" value={totals.spent.toFixed(1)} />
+              <MetricCard label="Closed Effort (h)" value={totals.completedSpent.toFixed(1)} />
+            </div>
+          </div>
+        </header>
+
+        <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          {tasksQuery.isLoading ? 'Loading tasks from API...' : null}
+          {tasksQuery.isError ? 'Failed to load tasks. Verify API and tenant header.' : null}
+          {isSaving ? 'Saving changes...' : null}
+        </section>
+
+        <section className="mb-5 grid gap-4 rounded-2xl border border-slate-200 bg-white/85 p-4 lg:grid-cols-[2fr_auto]">
+          <div className="grid gap-2">
+            <input
+              className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm"
+              placeholder="Search by id, title, module, assignee..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <button
+            className="h-fit rounded-md bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500"
+            type="button"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            New task
+          </button>
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-4">
+          {taskStatusOrder.map((status) => {
+            const columnTasks = filteredTasks.filter((task) => task.status === status)
+            const style = columnStyleByStatus[status]
+            return (
+              <article
+                key={status}
+                className={`min-h-[420px] rounded-2xl border p-3 ${style.column}`}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => {
+                  if (draggingTaskId) {
+                    updateTaskStatusById(draggingTaskId, status)
+                  }
+                  setDraggingTaskId(null)
+                }}
+              >
+                <header className={`mb-3 flex items-center justify-between rounded-lg px-3 py-2 ${style.header}`}>
+                  <h3 className="text-sm font-medium">{taskStatusLabel[status]}</h3>
+                  <span className={`rounded-full px-2 py-0.5 text-xs ${style.badge}`}>{columnTasks.length}</span>
+                </header>
+
+                <div className="space-y-3">
+                  {columnTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`cursor-grab rounded-xl border p-3 text-slate-900 active:cursor-grabbing ${style.card}`}
+                      draggable
+                      onDragStart={() => setDraggingTaskId(task.id)}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-xs text-slate-700">{task.id}</p>
+                          <h4 className="text-sm font-medium text-slate-900">{task.title}</h4>
+                        </div>
+                        <span className={`rounded px-2 py-0.5 text-[11px] ${style.badge}`}>{taskTypeLabel[task.type]}</span>
+                      </div>
+
+                      <p className="mb-3 text-xs text-slate-700">Module: {task.module}</p>
+                      <p className="mb-3 text-xs text-slate-800">{task.description}</p>
+
+                      <div className="mb-2 grid grid-cols-2 gap-2 text-xs">
+                        <span className={`rounded border px-2 py-1 ${style.input}`}>Est: {task.estimateHours}h</span>
+                        <label className={`rounded border px-2 py-1 ${style.input}`}>
+                          Spent:
+                          <input
+                            className="ml-1 w-14 rounded border border-slate-300 bg-white px-1"
+                            type="number"
+                            min={0}
+                            step={0.5}
+                            value={task.spentHours}
+                            onChange={(event) => updateSpentHours(task.id, Number(event.target.value))}
+                          />
+                          h
+                        </label>
+                      </div>
+
+                      <select
+                        className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900"
+                        value={task.status}
+                        onChange={(event) => updateTaskStatusById(task.id, event.target.value as TaskStatus)}
+                      >
+                        {taskStatusOrder.map((value) => (
+                          <option key={value} value={value}>
+                            {taskStatusLabel[value]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            )
+          })}
+        </section>
+      </section>
+      {isCreateModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/35 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-400/40">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">Create task</h2>
+              <button
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+                type="button"
+                onClick={() => setIsCreateModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+            <form className="grid gap-3" onSubmit={handleCreateTask}>
+              <input
+                className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                placeholder="Task title"
+                value={newTitle}
+                onChange={(event) => setNewTitle(event.target.value)}
+              />
+              <textarea
+                className="min-h-24 rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                placeholder="Task description"
+                value={newDescription}
+                onChange={(event) => setNewDescription(event.target.value)}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                  value={newType}
+                  onChange={(event) => setNewType(event.target.value as TaskType)}
+                >
+                  {Object.entries(taskTypeLabel).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                  placeholder="Module"
+                  value={newModule}
+                  onChange={(event) => setNewModule(event.target.value)}
+                />
+              </div>
+              <input
+                className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                type="number"
+                min={0.5}
+                step={0.5}
+                value={newEstimate}
+                onChange={(event) => setNewEstimate(Number(event.target.value))}
+              />
+              <button className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500" type="submit">
+                Add task
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </main>
+  )
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right">
+      <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-lg font-semibold text-slate-900">{value}</p>
+    </div>
+  )
+}

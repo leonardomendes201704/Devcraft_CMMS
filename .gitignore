@@ -1,0 +1,22 @@
+﻿# Build outputs
+**/bin/
+**/obj/
+
+# Node
+**/node_modules/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+
+# Env
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
