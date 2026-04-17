@@ -8,6 +8,10 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
 
   await page.goto('/kanban')
   await expect(page.getByRole('heading', { name: 'Devcraft CMMS - Kanban' })).toBeVisible()
+  await page.getByRole('button', { name: 'View changelog' }).click()
+  await expect(page.getByRole('heading', { name: 'Project Changelog' })).toBeVisible()
+  await expect(page.getByText('0.1.0-foundation', { exact: false })).toBeVisible()
+  await page.getByRole('button', { name: 'Close' }).first().click()
 
   const tasksMetricValue = page
     .locator('div')

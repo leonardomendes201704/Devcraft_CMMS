@@ -1,4 +1,5 @@
 using CMMS.Domain.Common;
+using CMMS.Domain.Project;
 using CMMS.Domain.Tasks;
 using CMMS.Domain.WorkOrders;
 using CMMS.Shared.Tenancy;
@@ -11,6 +12,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     private readonly ICurrentTenant _currentTenant = currentTenant;
 
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
+    public DbSet<ProjectChangelogEntry> ProjectChangelogEntries => Set<ProjectChangelogEntry>();
     public DbSet<KanbanTask> KanbanTasks => Set<KanbanTask>();
     public DbSet<KanbanTaskAuditLog> KanbanTaskAuditLogs => Set<KanbanTaskAuditLog>();
 
@@ -65,6 +67,19 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                 .HasForeignKey(x => x.KanbanTaskId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
+        });
+
+        modelBuilder.Entity<ProjectChangelogEntry>(entity =>
+        {
+            entity.ToTable("project_changelog_entries");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Version).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.Category).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(4000).IsRequired();
+            entity.Property(x => x.Source).HasMaxLength(32).IsRequired();
+            entity.HasIndex(x => new { x.Version, x.ReleaseDateUtc, x.Category, x.Description })
+                .IsUnique()
+                .HasDatabaseName("IX_project_changelog_entries_unique");
         });
     }
 

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { listProjectChangelog } from '../../shared/api/changelog'
 import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
 import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskEvidence, type TaskStatus, type TaskType } from './types'
 
@@ -22,6 +23,13 @@ export function KanbanPage() {
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [lightboxEvidence, setLightboxEvidence] = useState<TaskEvidence | null>(null)
+  const [isChangelogOpen, setIsChangelogOpen] = useState(false)
+
+  const changelogQuery = useQuery({
+    queryKey: ['project-changelog'],
+    queryFn: listProjectChangelog,
+    enabled: isChangelogOpen,
+  })
 
   const refreshTasks = () => queryClient.invalidateQueries({ queryKey: ['kanban-tasks'] })
 
@@ -205,6 +213,16 @@ export function KanbanPage() {
             onClick={() => setIsCreateModalOpen(true)}
           >
             New task
+          </button>
+        </section>
+
+        <section className="mb-4 flex justify-end">
+          <button
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            type="button"
+            onClick={() => setIsChangelogOpen(true)}
+          >
+            View changelog
           </button>
         </section>
 
@@ -449,6 +467,48 @@ export function KanbanPage() {
               {lightboxEvidence.title} - {formatLocalTimestamp(lightboxEvidence.capturedAtUtc)}
             </figcaption>
           </figure>
+        </div>
+      ) : null}
+      {isChangelogOpen ? (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center bg-slate-900/45 px-4" onClick={() => setIsChangelogOpen(false)}>
+          <article
+            className="max-h-[85vh] w-full max-w-3xl overflow-auto rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-2xl shadow-slate-400/40"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Project Changelog</h2>
+              <button
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+                type="button"
+                onClick={() => setIsChangelogOpen(false)}
+              >
+                Close
+              </button>
+            </header>
+
+            {changelogQuery.isLoading ? <p className="text-sm text-slate-600">Loading changelog...</p> : null}
+            {changelogQuery.isError ? <p className="text-sm text-rose-600">Failed to load changelog from API.</p> : null}
+
+            {changelogQuery.data?.map((release) => (
+              <section key={`${release.version}-${release.releaseDate}`} className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <h3 className="text-sm font-semibold text-slate-900">
+                  {release.version} - {release.releaseDate}
+                </h3>
+                <div className="mt-2 space-y-2">
+                  {release.sections.map((section) => (
+                    <div key={`${release.version}-${section.category}`}>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">{section.category}</p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-800">
+                        {section.items.map((item) => (
+                          <li key={item.id}>{item.description}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </article>
         </div>
       ) : null}
     </main>
