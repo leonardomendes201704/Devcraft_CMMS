@@ -17,6 +17,7 @@
 | TASK-REQ-2026-04-17-07 | Hardening: exigir apontamento de esforco antes de fechar task | closed | high | Kanban API task: `ccdc0477-4c33-49aa-b04a-ba4dcfefa6e9`, spent final: `1.2h` |
 | TASK-REQ-2026-04-17-08 | Diretriz operacional: start local + active e entrega com close + tempo gasto, mantendo app rodando | closed | high | Kanban API task: `03c5c86f-e514-4f70-abea-ce2ecae1f7f2`, start: `2026-04-17 12:01:09 -03:00`, end: `2026-04-17 12:02:16 -03:00`, spent final: `0.1h` |
 | TASK-REQ-2026-04-17-09 | Corrigir fuso horario UTC no modal do Kanban (Created/Closed) | closed | high | Kanban API task: `49291097-2fa1-4c19-a176-6bf281362fb9`, start: `2026-04-17 12:07:18 -03:00`, end: `2026-04-17 12:07:20 -03:00`, spent final: `0.4h` |
+| TASK-REQ-2026-04-17-10 | Forcar lifecycle completo nas tasks de validacao Playwright | closed | high | Kanban API task: `72a76b1f-7f1f-4a8d-a80b-7ec96158497f`, start: `2026-04-17 12:12:34 -03:00`, end: `2026-04-17 12:13:14 -03:00`, spent final: `0.5h` |
 
 ## Transition Log
 
@@ -40,6 +41,9 @@
 | TASK-REQ-2026-04-17-09 | new -> active | 2026-04-17 12:07:18 -03:00 (LOCAL) | Solicitacao de ajuste de timezone recebida e task iniciada |
 | TASK-REQ-2026-04-17-09 | active -> resolved | 2026-04-17 12:07:20 -03:00 (LOCAL) | Backend/frontend ajustados para serializacao e parsing UTC corretos |
 | TASK-REQ-2026-04-17-09 | resolved -> closed | 2026-04-17 12:07:20 -03:00 (LOCAL) | Task Kanban fechada com `spentHours` final `0.4h` |
+| TASK-REQ-2026-04-17-10 | new -> active | 2026-04-17 12:12:34 -03:00 (LOCAL) | Solicitacao recebida para evitar tasks Playwright presas em NEW |
+| TASK-REQ-2026-04-17-10 | active -> resolved | 2026-04-17 12:13:14 -03:00 (LOCAL) | Teste Playwright alterado para transicionar e fechar task automaticamente |
+| TASK-REQ-2026-04-17-10 | resolved -> closed | 2026-04-17 12:13:14 -03:00 (LOCAL) | Task Kanban fechada com `spentHours` final `0.5h` |
 
 ## Baseline Done
 
