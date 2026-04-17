@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
@@ -25,7 +25,7 @@ export function KanbanPage() {
   const [newEstimate, setNewEstimate] = useState(2)
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
-  const [lightboxEvidence, setLightboxEvidence] = useState<TaskEvidence | null>(null)
+  const [lightboxEvidenceId, setLightboxEvidenceId] = useState<string | null>(null)
   const [isChangelogOpen, setIsChangelogOpen] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [failedEvidenceImages, setFailedEvidenceImages] = useState<Record<string, boolean>>({})
@@ -117,6 +117,87 @@ export function KanbanPage() {
 
     return tasks.find((task) => task.id === selectedTaskId) ?? null
   }, [selectedTaskId, tasks])
+
+  const orderedTaskEvidences = useMemo(() => {
+    if (!selectedTask) {
+      return []
+    }
+
+    return [...selectedTask.evidences].sort(compareEvidenceForDisplay)
+  }, [selectedTask])
+
+  const orderedImageEvidences = useMemo(
+    () => orderedTaskEvidences.filter((evidence) => !isApiEvidence(evidence)),
+    [orderedTaskEvidences],
+  )
+
+  const lightboxIndex = useMemo(() => {
+    if (!lightboxEvidenceId) {
+      return -1
+    }
+
+    return orderedImageEvidences.findIndex((evidence) => evidence.id === lightboxEvidenceId)
+  }, [lightboxEvidenceId, orderedImageEvidences])
+
+  const lightboxEvidence = lightboxIndex >= 0 ? orderedImageEvidences[lightboxIndex] : null
+
+  useEffect(() => {
+    if (!lightboxEvidence) {
+      return
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setLightboxEvidenceId(null)
+        return
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        goToPreviousEvidence()
+        return
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        goToNextEvidence()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeydown)
+    return () => window.removeEventListener('keydown', handleKeydown)
+  }, [lightboxEvidence, lightboxIndex, orderedImageEvidences])
+
+  useEffect(() => {
+    if (!lightboxEvidenceId) {
+      return
+    }
+
+    const existsInCurrentTask = orderedImageEvidences.some((evidence) => evidence.id === lightboxEvidenceId)
+    if (!existsInCurrentTask) {
+      setLightboxEvidenceId(null)
+    }
+  }, [lightboxEvidenceId, orderedImageEvidences])
+
+  function openEvidenceLightbox(evidence: TaskEvidence) {
+    setLightboxEvidenceId(evidence.id)
+  }
+
+  function goToPreviousEvidence() {
+    if (lightboxIndex <= 0) {
+      return
+    }
+
+    setLightboxEvidenceId(orderedImageEvidences[lightboxIndex - 1].id)
+  }
+
+  function goToNextEvidence() {
+    if (lightboxIndex < 0 || lightboxIndex >= orderedImageEvidences.length - 1) {
+      return
+    }
+
+    setLightboxEvidenceId(orderedImageEvidences[lightboxIndex + 1].id)
+  }
 
   function updateTaskStatusById(taskId: string, status: TaskStatus) {
     const task = tasks.find((item) => item.id === taskId)
@@ -477,7 +558,7 @@ export function KanbanPage() {
                 <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">No evidence attached.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-                  {selectedTask.evidences.map((evidence) => (
+                  {orderedTaskEvidences.map((evidence) => (
                     isApiEvidence(evidence) ? (
                       <div key={evidence.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm">
                         <div className="flex h-28 items-center justify-center bg-slate-900 px-2 text-center text-xs font-semibold uppercase tracking-wide text-emerald-300">
@@ -498,7 +579,7 @@ export function KanbanPage() {
                         key={evidence.id}
                         className="group overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm"
                         type="button"
-                        onClick={() => setLightboxEvidence(evidence)}
+                        onClick={() => openEvidenceLightbox(evidence)}
                       >
                         {!resolveEvidenceUrl(evidence.imageUrl) || failedEvidenceImages[evidence.id] ? (
                           <div className="flex h-28 w-full items-center justify-center bg-slate-100 px-2 text-center text-xs text-slate-500">
@@ -524,10 +605,10 @@ export function KanbanPage() {
                 </div>
               )}
             </section>
-            {selectedTask.evidences.some((evidence) => isApiEvidence(evidence)) ? (
+            {orderedTaskEvidences.some((evidence) => isApiEvidence(evidence)) ? (
               <section className="mt-4 space-y-2">
                 <h3 className="text-sm font-semibold text-slate-900">API Payloads</h3>
-                {selectedTask.evidences
+                {orderedTaskEvidences
                   .filter((evidence) => isApiEvidence(evidence))
                   .map((evidence) => (
                     <article key={`${evidence.id}-payload`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -545,21 +626,42 @@ export function KanbanPage() {
           </article>
         </div>
       ) : null}
-      {lightboxEvidence && lightboxEvidence.kind === 'image' ? (
+      {lightboxEvidence ? (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/85 p-4"
-          onClick={() => setLightboxEvidence(null)}
+          onClick={() => setLightboxEvidenceId(null)}
         >
-          <figure className="max-h-[90vh] max-w-5xl" onClick={(event) => event.stopPropagation()}>
-            <img
-              alt={lightboxEvidence.title}
-              className="max-h-[82vh] w-auto max-w-full rounded-lg object-contain shadow-2xl"
-              src={resolveEvidenceUrl(lightboxEvidence.imageUrl)}
-            />
-            <figcaption className="mt-2 text-center text-sm text-slate-100">
-              {lightboxEvidence.title} - {formatLocalTimestamp(lightboxEvidence.capturedAtUtc)}
-            </figcaption>
-          </figure>
+          <div className="flex w-full max-w-6xl items-center gap-3" onClick={(event) => event.stopPropagation()}>
+            <button
+              className="rounded-md border border-slate-500 bg-slate-900/80 px-3 py-2 text-sm font-medium text-white disabled:opacity-40"
+              type="button"
+              disabled={lightboxIndex <= 0}
+              onClick={goToPreviousEvidence}
+            >
+              Previous
+            </button>
+
+            <figure className="max-h-[90vh] flex-1">
+              <img
+                alt={lightboxEvidence.title}
+                className="max-h-[82vh] w-auto max-w-full rounded-lg object-contain shadow-2xl"
+                src={resolveEvidenceUrl(lightboxEvidence.imageUrl)}
+              />
+              <figcaption className="mt-2 text-center text-sm text-slate-100">
+                {lightboxEvidence.title} - {formatLocalTimestamp(lightboxEvidence.capturedAtUtc)} ({lightboxIndex + 1}/
+                {orderedImageEvidences.length})
+              </figcaption>
+            </figure>
+
+            <button
+              className="rounded-md border border-slate-500 bg-slate-900/80 px-3 py-2 text-sm font-medium text-white disabled:opacity-40"
+              type="button"
+              disabled={lightboxIndex >= orderedImageEvidences.length - 1}
+              onClick={goToNextEvidence}
+            >
+              Next
+            </button>
+          </div>
         </div>
       ) : null}
       {isChangelogOpen ? (
@@ -713,6 +815,35 @@ function isApiEvidence(evidence: TaskEvidence): boolean {
   }
 
   return typeof evidence.payloadJson === 'string' && evidence.payloadJson.trim().length > 0
+}
+
+function compareEvidenceForDisplay(a: TaskEvidence, b: TaskEvidence): number {
+  const aStep = extractStepNumber(a.title)
+  const bStep = extractStepNumber(b.title)
+
+  if (aStep !== null && bStep !== null && aStep !== bStep) {
+    return aStep - bStep
+  }
+
+  if (aStep !== null && bStep === null) {
+    return -1
+  }
+
+  if (aStep === null && bStep !== null) {
+    return 1
+  }
+
+  return Date.parse(a.capturedAtUtc) - Date.parse(b.capturedAtUtc)
+}
+
+function extractStepNumber(title: string): number | null {
+  const match = /^Step\s+(\d+)/i.exec(title.trim())
+  if (!match) {
+    return null
+  }
+
+  const value = Number.parseInt(match[1], 10)
+  return Number.isFinite(value) ? value : null
 }
 
 function formatApiPayload(payloadJson: string | null): string {

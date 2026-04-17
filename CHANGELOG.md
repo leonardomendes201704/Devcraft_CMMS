@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.11-evidence-order-lightbox-navigation] - 2026-04-17
+
+### Changed
+- Kanban task modal now displays evidence cards in ascending step order (`Step 01`, `Step 02`, ...).
+- Added lightbox navigation controls for image evidences:
+  - previous/next buttons
+  - keyboard support (`ArrowLeft`, `ArrowRight`, `Escape`)
+- Added image sequence indicator in lightbox caption (`current/total`).
+
 ## [0.1.10-jwt-contract-and-api-smoke] - 2026-04-17
 
 ### Added
