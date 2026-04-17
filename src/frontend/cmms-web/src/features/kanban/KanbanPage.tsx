@@ -31,6 +31,18 @@ export function KanbanPage() {
     enabled: isChangelogOpen,
   })
 
+  const sortedChangelogReleases = useMemo(() => {
+    const releases = changelogQuery.data ?? []
+    return [...releases].sort((a, b) => {
+      const dateDiff = Date.parse(b.releaseDate) - Date.parse(a.releaseDate)
+      if (dateDiff !== 0) {
+        return dateDiff
+      }
+
+      return b.version.localeCompare(a.version, undefined, { numeric: true, sensitivity: 'base' })
+    })
+  }, [changelogQuery.data])
+
   const refreshTasks = () => queryClient.invalidateQueries({ queryKey: ['kanban-tasks'] })
 
   const createTaskMutation = useMutation({
@@ -489,7 +501,7 @@ export function KanbanPage() {
             {changelogQuery.isLoading ? <p className="text-sm text-slate-600">Loading changelog...</p> : null}
             {changelogQuery.isError ? <p className="text-sm text-rose-600">Failed to load changelog from API.</p> : null}
 
-            {changelogQuery.data?.map((release) => (
+            {sortedChangelogReleases.map((release) => (
               <section key={`${release.version}-${release.releaseDate}`} className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <h3 className="text-sm font-semibold text-slate-900">
                   {release.version} - {release.releaseDate}
