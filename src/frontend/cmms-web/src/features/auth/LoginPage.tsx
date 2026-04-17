@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { login } from '../../shared/api/auth'
-import { setAccessToken } from '../../shared/auth/session'
+import { setAccessToken, setSessionUser } from '../../shared/auth/session'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -14,7 +14,8 @@ export function LoginPage() {
     mutationFn: login,
     onSuccess: (result) => {
       setAccessToken(result.accessToken)
-      navigate('/kanban', { replace: true })
+      setSessionUser(result.user)
+      navigate('/app/home', { replace: true })
     },
   })
 

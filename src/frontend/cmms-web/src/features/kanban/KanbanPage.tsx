@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
 import { listProjectChangelog } from '../../shared/api/changelog'
 import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
-import { clearAccessToken } from '../../shared/auth/session'
 import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskEvidence, type TaskStatus, type TaskType } from './types'
 
 export function KanbanPage() {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const tasksQuery = useQuery({
     queryKey: ['kanban-tasks'],
@@ -259,11 +256,6 @@ export function KanbanPage() {
     )
   }
 
-  function handleLogout() {
-    clearAccessToken()
-    navigate('/login', { replace: true })
-  }
-
   const isSaving = createTaskMutation.isPending || statusMutation.isPending || effortMutation.isPending || completeMutation.isPending
 
   const columnStyleByStatus: Record<TaskStatus, { column: string; header: string; card: string; badge: string; input: string }> = {
@@ -298,8 +290,8 @@ export function KanbanPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,#fffef6_0%,#f8fbff_52%,#eff4ff_100%)] text-slate-900">
-      <section className="mx-auto max-w-[1500px] px-6 py-8">
+    <section className="text-slate-900">
+      <div className="mx-auto max-w-[1500px]">
         <header className="mb-6 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-lg shadow-slate-200/70 backdrop-blur">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -348,13 +340,6 @@ export function KanbanPage() {
             onClick={() => setIsChangelogOpen(true)}
           >
             View changelog
-          </button>
-          <button
-            className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
-            type="button"
-            onClick={handleLogout}
-          >
-            Logout
           </button>
         </section>
 
@@ -433,7 +418,7 @@ export function KanbanPage() {
             )
           })}
         </section>
-      </section>
+      </div>
       {isCreateModalOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/35 px-4">
           <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-400/40">
@@ -706,7 +691,7 @@ export function KanbanPage() {
           </article>
         </div>
       ) : null}
-    </main>
+    </section>
   )
 }
 

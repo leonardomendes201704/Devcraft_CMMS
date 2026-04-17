@@ -31,10 +31,11 @@ test('home renders title', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: 'Sign in' }).click()
   await captureAndAttachStepEvidence(page.request, page, testInfo, evidenceTask, 5, 'submitted sign in')
 
-  await expect(page.getByRole('heading', { name: 'Devcraft CMMS - Kanban' })).toBeVisible()
-  await captureAndAttachStepEvidence(page.request, page, testInfo, evidenceTask, 6, 'kanban loaded after login')
+  await expect(page).toHaveURL(/\/app\/home$/)
+  await expect(page.getByRole('heading', { name: 'Devcraft CMMS' })).toBeVisible()
+  await captureAndAttachStepEvidence(page.request, page, testInfo, evidenceTask, 6, 'shell home loaded after login')
 
-  await page.getByRole('button', { name: 'Logout' }).click()
+  await page.getByRole('button', { name: /Sair|Logout/ }).click()
   await expect(page.getByRole('heading', { name: 'Admin Login' })).toBeVisible()
   await captureAndAttachStepEvidence(page.request, page, testInfo, evidenceTask, 7, 'logout returned to login')
 

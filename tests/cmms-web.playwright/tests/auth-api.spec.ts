@@ -75,6 +75,71 @@ test('policy guard denies anonymous and allows admin_master for protected endpoi
   expect(protectedResponse.ok()).toBeTruthy()
 })
 
+test('admin_master can manage users in tenant scope', async ({ request }) => {
+  const loginResponse = await request.post(`${apiBaseUrl}/api/auth/login`, {
+    headers: {
+      'X-Tenant-Id': tenantId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      email: 'admin@cmms.local',
+      password: 'Naotemsenha0(',
+    },
+  })
+  expect(loginResponse.ok()).toBeTruthy()
+  const loginBody = (await loginResponse.json()) as { accessToken: string }
+
+  const authHeaders = {
+    Authorization: `Bearer ${loginBody.accessToken}`,
+    'X-Tenant-Id': tenantId,
+    'Content-Type': 'application/json',
+  }
+
+  const uniqueEmail = `api.user.${Date.now()}@cmms.local`
+
+  const createResponse = await request.post(`${apiBaseUrl}/api/auth/users`, {
+    headers: authHeaders,
+    data: {
+      email: uniqueEmail,
+      password: 'ApiUserPassw0rd!',
+      role: 'admin',
+      isActive: true,
+    },
+  })
+  expect(createResponse.ok()).toBeTruthy()
+  const createdUser = (await createResponse.json()) as { id: string; email: string; role: string; isActive: boolean }
+  expect(createdUser.email).toBe(uniqueEmail)
+  expect(createdUser.role).toBe('admin')
+  expect(createdUser.isActive).toBeTruthy()
+
+  const listResponse = await request.get(`${apiBaseUrl}/api/auth/users`, {
+    headers: authHeaders,
+  })
+  expect(listResponse.ok()).toBeTruthy()
+  const users = (await listResponse.json()) as Array<{ id: string; email: string }>
+  expect(users.some((user) => user.id === createdUser.id)).toBeTruthy()
+
+  const updateResponse = await request.patch(`${apiBaseUrl}/api/auth/users/${createdUser.id}`, {
+    headers: authHeaders,
+    data: {
+      role: 'technician',
+      isActive: false,
+    },
+  })
+  expect(updateResponse.ok()).toBeTruthy()
+  const updatedUser = (await updateResponse.json()) as { role: string; isActive: boolean }
+  expect(updatedUser.role).toBe('technician')
+  expect(updatedUser.isActive).toBeFalsy()
+
+  const resetPasswordResponse = await request.post(`${apiBaseUrl}/api/auth/users/${createdUser.id}/reset-password`, {
+    headers: authHeaders,
+    data: {
+      password: 'ApiUserPassw0rd!2',
+    },
+  })
+  expect(resetPasswordResponse.ok()).toBeTruthy()
+})
+
 function parseJwtPayload(token: string): Record<string, unknown> {
   const [, payload] = token.split('.')
   expect(payload).toBeTruthy()

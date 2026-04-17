@@ -8,7 +8,7 @@ import {
 } from './support/evidence'
 
 test('kanban renders and creates task', async ({ page, request }, testInfo) => {
-  const taskTitle = `Validacao E2E Kanban ${Date.now()}`
+  const taskTitle = `Smoke board card ${Date.now()}`
   const authContext = await createAuthContext(request)
   const evidenceTask = await createFrontendEvidenceTask(
     request,
@@ -25,6 +25,9 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 2, 'credentials filled')
 
   await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/app\/home$/)
+  await page.getByRole('link', { name: /Kanban/i }).click()
+  await expect(page).toHaveURL(/\/app\/kanban$/)
   await expect(page.getByRole('heading', { name: 'Devcraft CMMS - Kanban' })).toBeVisible()
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 3, 'kanban loaded')
 
@@ -75,6 +78,42 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
 
   await page.getByRole('button', { name: 'Close' }).first().click()
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 8, 'flow completed with modal closed')
+
+  const toActive = await request.patch(`http://localhost:8117/api/tasks/${createdTask!.id}/status`, {
+    headers: authContext.authHeaders,
+    data: { status: 'active' },
+  })
+  expect(toActive.ok()).toBeTruthy()
+
+  const toResolved = await request.patch(`http://localhost:8117/api/tasks/${createdTask!.id}/status`, {
+    headers: authContext.authHeaders,
+    data: { status: 'resolved' },
+  })
+  expect(toResolved.ok()).toBeTruthy()
+
+  const setEffort = await request.patch(`http://localhost:8117/api/tasks/${createdTask!.id}/effort`, {
+    headers: authContext.authHeaders,
+    data: { spentHours: 0.2 },
+  })
+  expect(setEffort.ok()).toBeTruthy()
+
+  const addCleanupEvidence = await request.post(`http://localhost:8117/api/tasks/${createdTask!.id}/evidences`, {
+    headers: authContext.authHeaders,
+    data: {
+      title: 'Step 00 - cleanup evidence',
+      kind: 'image',
+      imageUrl: '/evidences/playwright-placeholder.png',
+      source: 'playwright',
+      capturedAtUtc: new Date().toISOString(),
+    },
+  })
+  expect(addCleanupEvidence.ok()).toBeTruthy()
+
+  const closeCreatedTask = await request.post(`http://localhost:8117/api/tasks/${createdTask!.id}/complete`, {
+    headers: authContext.authHeaders,
+    data: { spentHours: 0.2 },
+  })
+  expect(closeCreatedTask.ok()).toBeTruthy()
 
   await closeTaskWithSpentHours(request, evidenceTask, 0.8)
   const evidenceTaskData = await getTaskById(request, authContext, evidenceTask.taskId)

@@ -1,4 +1,4 @@
-﻿import i18n from 'i18next'
+import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
 const resources = {
@@ -11,6 +11,22 @@ const resources = {
       unknown: 'Nao verificado',
       language: 'Idioma',
       tenantHint: 'Tenant enviado via header X-Tenant-Id no backend.',
+      shell: {
+        home: 'Inicio',
+        kanban: 'Kanban',
+        userAdmin: 'Administracao de usuarios',
+        workspace: 'Workspace',
+        logout: 'Sair',
+        tenant: 'Tenant',
+        signedUser: 'Usuario logado',
+        role: 'Perfil',
+        console: 'CMMS Console',
+        platform: 'Devcraft Platform',
+        menu: 'Menu',
+        collapse: 'Recolher menu',
+        expand: 'Expandir menu',
+        footer: 'Devcraft CMMS SaaS - fundacao do shell operacional',
+      },
     },
   },
   'en-US': {
@@ -22,6 +38,22 @@ const resources = {
       unknown: 'Not checked',
       language: 'Language',
       tenantHint: 'Tenant is sent by X-Tenant-Id header on backend.',
+      shell: {
+        home: 'Home',
+        kanban: 'Kanban',
+        userAdmin: 'User administration',
+        workspace: 'Workspace',
+        logout: 'Logout',
+        tenant: 'Tenant',
+        signedUser: 'Signed user',
+        role: 'Role',
+        console: 'CMMS Console',
+        platform: 'Devcraft Platform',
+        menu: 'Menu',
+        collapse: 'Collapse menu',
+        expand: 'Expand menu',
+        footer: 'Devcraft CMMS SaaS - operational shell foundation',
+      },
     },
   },
 }

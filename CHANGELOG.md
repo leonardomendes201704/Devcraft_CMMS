@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.13-app-shell-foundation] - 2026-04-17
+
+### Added
+- Added authenticated application shell with shared layout primitives:
+  - responsive sidebar menu
+  - sticky topbar
+  - shared content container
+  - footer
+- Added guarded app route space under `/app/*` with dedicated pages:
+  - `/app/home`
+  - `/app/kanban`
+  - `/app/admin/users`
+  - `/app/denied`
+- Added role-based route gate for User Administration (`admin_master`).
+- Added dedicated access-denied page for unauthorized module navigation.
+
+### Changed
+- Login now redirects to `/app/home` instead of direct Kanban landing.
+- Moved main shell/navigation labels to i18n resources (`pt-BR`, `en-US`) to reduce hardcoded UI text.
+- Updated Kanban and Users Admin views to operate inside the shared shell container.
+- Updated Playwright E2E flows to validate shell-based navigation (`home -> modules`) while preserving step evidence conventions.
+
 ## [0.1.12-lightbox-portrait-centering] - 2026-04-17
 
 ### Changed
