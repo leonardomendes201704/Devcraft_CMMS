@@ -104,6 +104,13 @@ test('admin_master can manage users in tenant scope', async ({ request }) => {
       password: 'ApiUserPassw0rd!',
       role: 'admin',
       isActive: true,
+      profile: {
+        fullName: 'API Test User',
+        displayName: 'ApiUser',
+        locale: 'pt-BR',
+        timeZone: 'America/Sao_Paulo',
+        metadataJson: '{}',
+      },
     },
   })
   expect(createResponse.ok()).toBeTruthy()

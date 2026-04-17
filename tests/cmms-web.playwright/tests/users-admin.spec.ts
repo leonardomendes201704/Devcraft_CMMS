@@ -43,6 +43,7 @@ test('user admin screen creates and updates user', async ({ page, request }, tes
 
   await page.getByLabel('User email').fill(testEmail)
   await page.getByLabel('User password').fill('QaFlowPassw0rd!')
+  await page.getByLabel('User full name').fill('QA Flow User')
   await page.getByLabel('User role').selectOption('admin')
   await page.getByRole('button', { name: 'Create user' }).click()
   await expect(page).toHaveURL(new RegExp(`/app/admin/users/.+`))

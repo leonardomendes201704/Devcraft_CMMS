@@ -62,6 +62,13 @@ public sealed class AuthController(IConfiguration configuration, AppDbContext db
                 Role = AuthRoles.AdminMaster,
                 IsActive = true
             };
+            user.Profile = new AuthUserProfile
+            {
+                FullName = "Master Admin",
+                DisplayName = "Admin",
+                Locale = "pt-BR",
+                TimeZone = "America/Sao_Paulo"
+            };
 
             _dbContext.AuthUsers.Add(user);
             try
@@ -75,8 +82,34 @@ public sealed class AuthController(IConfiguration configuration, AppDbContext db
             }
         }
 
-        if (user is null || !PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        if (user is null)
         {
+            return Unauthorized(new
+            {
+                error = "invalid_credentials",
+                message = "Invalid email or password."
+            });
+        }
+
+        if (user.LockoutEndUtc.HasValue && user.LockoutEndUtc.Value > DateTime.UtcNow)
+        {
+            return Unauthorized(new
+            {
+                error = "user_locked",
+                message = "User is temporarily locked due to failed login attempts."
+            });
+        }
+
+        if (!PasswordHasher.VerifyPassword(request.Password, user.PasswordHash))
+        {
+            user.AccessFailedCount += 1;
+            if (user.AccessFailedCount >= 5)
+            {
+                user.LockoutEndUtc = DateTime.UtcNow.AddMinutes(15);
+                user.AccessFailedCount = 0;
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
             return Unauthorized(new
             {
                 error = "invalid_credentials",
@@ -92,6 +125,11 @@ public sealed class AuthController(IConfiguration configuration, AppDbContext db
                 message = "User is inactive."
             });
         }
+
+        user.LastLoginAtUtc = DateTime.UtcNow;
+        user.AccessFailedCount = 0;
+        user.LockoutEndUtc = null;
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         var settings = _configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
         var issuer = string.IsNullOrWhiteSpace(settings.Issuer) ? "Devcraft.CMMS" : settings.Issuer.Trim();

@@ -30,10 +30,23 @@ export function UsersListPage() {
     const searchTerm = search.trim().toLowerCase()
 
     return sortedUsers.filter((user) => {
+      const profileFields = [
+        user.profile?.fullName,
+        user.profile?.displayName,
+        user.profile?.jobTitle,
+        user.profile?.department,
+        user.profile?.employeeCode,
+        user.profile?.phoneE164,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
       const matchesSearch =
         searchTerm.length === 0 ||
         user.email.toLowerCase().includes(searchTerm) ||
-        user.id.toLowerCase().includes(searchTerm)
+        user.id.toLowerCase().includes(searchTerm) ||
+        profileFields.includes(searchTerm)
 
       const matchesRole = roleFilter === 'all' || user.role === roleFilter
       const matchesStatus =
@@ -82,7 +95,7 @@ export function UsersListPage() {
           <input
             className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm"
             type="search"
-            placeholder="Search by email or id..."
+            placeholder="Search by email, id, name, job, phone..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -126,9 +139,13 @@ export function UsersListPage() {
               <div className="grid gap-2 md:grid-cols-[2fr_1fr_1fr_auto] md:items-center">
                 <div>
                   <p className="text-xs uppercase tracking-wide text-slate-500">{user.id}</p>
-                  <p className="text-sm font-medium text-slate-900">{user.email}</p>
+                  <p className="text-sm font-medium text-slate-900">{user.profile?.fullName ?? user.email}</p>
+                  <p className="text-xs text-slate-600">{user.email}</p>
                   <p className="text-xs text-slate-600">
                     {getRoleLabel(user.role)} - {user.isActive ? 'Active' : 'Inactive'}
+                  </p>
+                  <p className="text-xs text-slate-600">
+                    {user.profile?.jobTitle ?? '-'} / {user.profile?.department ?? '-'}
                   </p>
                   <p className="text-xs text-slate-600">Created: {formatLocalTimestamp(user.createdAtUtc)}</p>
                 </div>

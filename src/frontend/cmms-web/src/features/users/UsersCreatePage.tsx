@@ -15,6 +15,20 @@ export function UsersCreatePage() {
     password: '',
     role: 'technician' as AuthRole,
     isActive: true,
+    fullName: '',
+    displayName: '',
+    phoneE164: '',
+    jobTitle: '',
+    department: '',
+    employeeCode: '',
+    timeZone: 'America/Sao_Paulo',
+    locale: 'pt-BR',
+    avatarUrl: '',
+    emergencyContactName: '',
+    emergencyContactPhoneE164: '',
+    birthDate: '',
+    hireDate: '',
+    metadataJson: '{}',
   })
 
   const createUserMutation = useMutation({
@@ -29,7 +43,7 @@ export function UsersCreatePage() {
 
   function handleSubmit() {
     const email = values.email.trim().toLowerCase()
-    if (!email || !values.password.trim()) {
+    if (!email || !values.password.trim() || !values.fullName.trim()) {
       return
     }
 
@@ -39,6 +53,22 @@ export function UsersCreatePage() {
       password: values.password,
       role: values.role,
       isActive: values.isActive,
+      profile: {
+        fullName: values.fullName.trim(),
+        displayName: values.displayName.trim() || null,
+        phoneE164: values.phoneE164.trim() || null,
+        jobTitle: values.jobTitle.trim() || null,
+        department: values.department.trim() || null,
+        employeeCode: values.employeeCode.trim() || null,
+        timeZone: values.timeZone.trim() || null,
+        locale: values.locale.trim() || null,
+        avatarUrl: values.avatarUrl.trim() || null,
+        emergencyContactName: values.emergencyContactName.trim() || null,
+        emergencyContactPhoneE164: values.emergencyContactPhoneE164.trim() || null,
+        birthDate: values.birthDate || null,
+        hireDate: values.hireDate || null,
+        metadataJson: values.metadataJson.trim() || '{}',
+      },
     })
   }
 

@@ -1,22 +1,38 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getAuthUserById, resetAuthUserPassword, updateAuthUser, type AuthRole } from '../../shared/api/users'
-import { UserForm } from './components/UserForm'
+import { getAuthUserById, resetAuthUserPassword, updateAuthUser } from '../../shared/api/users'
+import { UserForm, type UserFormValues } from './components/UserForm'
 import { UsersPageHeader } from './components/UsersPageHeader'
 import { extractErrorMessage } from './utils'
+
+const defaultValues: UserFormValues = {
+  email: '',
+  password: '',
+  role: 'technician',
+  isActive: true,
+  fullName: '',
+  displayName: '',
+  phoneE164: '',
+  jobTitle: '',
+  department: '',
+  employeeCode: '',
+  timeZone: 'America/Sao_Paulo',
+  locale: 'pt-BR',
+  avatarUrl: '',
+  emergencyContactName: '',
+  emergencyContactPhoneE164: '',
+  birthDate: '',
+  hireDate: '',
+  metadataJson: '{}',
+}
 
 export function UsersEditPage() {
   const { userId = '' } = useParams()
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string | null>(null)
   const [resetPassword, setResetPassword] = useState('')
-  const [values, setValues] = useState({
-    email: '',
-    password: '',
-    role: 'technician' as AuthRole,
-    isActive: true,
-  })
+  const [values, setValues] = useState<UserFormValues>(defaultValues)
 
   const userQuery = useQuery({
     queryKey: ['auth-user', userId],
@@ -30,15 +46,50 @@ export function UsersEditPage() {
     }
 
     setValues({
+      ...defaultValues,
       email: userQuery.data.email,
       password: '',
       role: userQuery.data.role,
       isActive: userQuery.data.isActive,
+      fullName: userQuery.data.profile?.fullName ?? '',
+      displayName: userQuery.data.profile?.displayName ?? '',
+      phoneE164: userQuery.data.profile?.phoneE164 ?? '',
+      jobTitle: userQuery.data.profile?.jobTitle ?? '',
+      department: userQuery.data.profile?.department ?? '',
+      employeeCode: userQuery.data.profile?.employeeCode ?? '',
+      timeZone: userQuery.data.profile?.timeZone ?? defaultValues.timeZone,
+      locale: userQuery.data.profile?.locale ?? defaultValues.locale,
+      avatarUrl: userQuery.data.profile?.avatarUrl ?? '',
+      emergencyContactName: userQuery.data.profile?.emergencyContactName ?? '',
+      emergencyContactPhoneE164: userQuery.data.profile?.emergencyContactPhoneE164 ?? '',
+      birthDate: userQuery.data.profile?.birthDate?.slice(0, 10) ?? '',
+      hireDate: userQuery.data.profile?.hireDate?.slice(0, 10) ?? '',
+      metadataJson: userQuery.data.profile?.metadataJson ?? '{}',
     })
   }, [userQuery.data])
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ role, isActive }: { role: AuthRole; isActive: boolean }) => updateAuthUser(userId, { role, isActive }),
+    mutationFn: (nextValues: UserFormValues) =>
+      updateAuthUser(userId, {
+        role: nextValues.role,
+        isActive: nextValues.isActive,
+        profile: {
+          fullName: nextValues.fullName.trim(),
+          displayName: nextValues.displayName.trim() || null,
+          phoneE164: nextValues.phoneE164.trim() || null,
+          jobTitle: nextValues.jobTitle.trim() || null,
+          department: nextValues.department.trim() || null,
+          employeeCode: nextValues.employeeCode.trim() || null,
+          timeZone: nextValues.timeZone.trim() || null,
+          locale: nextValues.locale.trim() || null,
+          avatarUrl: nextValues.avatarUrl.trim() || null,
+          emergencyContactName: nextValues.emergencyContactName.trim() || null,
+          emergencyContactPhoneE164: nextValues.emergencyContactPhoneE164.trim() || null,
+          birthDate: nextValues.birthDate || null,
+          hireDate: nextValues.hireDate || null,
+          metadataJson: nextValues.metadataJson.trim() || '{}',
+        },
+      }),
     onSuccess: () => {
       setSaveError(null)
       queryClient.invalidateQueries({ queryKey: ['auth-users'] })
@@ -58,11 +109,13 @@ export function UsersEditPage() {
   })
 
   function handleSave() {
+    if (!values.fullName.trim()) {
+      setSaveError('Full name is required.')
+      return
+    }
+
     setSaveError(null)
-    updateUserMutation.mutate({
-      role: values.role,
-      isActive: values.isActive,
-    })
+    updateUserMutation.mutate(values)
   }
 
   function handleResetPassword() {

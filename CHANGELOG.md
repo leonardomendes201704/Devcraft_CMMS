@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.18-users-profile-entity-audit-hardening] - 2026-04-17
+
+### Added
+- Added rich user profile domain and persistence model:
+  - `AuthUserProfile` entity with enterprise fields (full name, phones, job title, department, employee code, locale/timezone, emergency contact, dates, metadata JSON).
+  - `AuthUserAuditLog` entity for user management audit trail (`user_created`, `user_updated`, `password_reset`).
+- Added `AuthUser` security fields:
+  - `LastLoginAtUtc`
+  - `AccessFailedCount`
+  - `LockoutEndUtc`
+- Added API support for enriched profile payload/response in users endpoints (`list/get/create/update`).
+
+### Changed
+- Hardened auth login flow with lockout policy and failed-attempt tracking (5 failures -> 15-minute lockout).
+- Updated users UI flow (List/Create/Edit/View) to handle full profile model end-to-end.
+- Expanded users list search to include profile attributes (name/job/department/employee code/phone).
+- Updated users summary view with profile and last-login details.
+- Fixed auth schema bootstrap SQL formatting for EF raw SQL (`MetadataJson` default brace escaping), preventing startup failure in test webserver bootstrap.
+- Updated Playwright suites to match enriched user contract:
+  - `users-admin.spec.ts` now fills required full name.
+  - `auth-api.spec.ts` now sends required `profile` payload for user creation.
+
 ## [0.1.17-governance-changelog-preflight] - 2026-04-17
 
 ### Added

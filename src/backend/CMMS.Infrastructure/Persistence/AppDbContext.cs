@@ -14,6 +14,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
     public DbSet<AuthUser> AuthUsers => Set<AuthUser>();
+    public DbSet<AuthUserProfile> AuthUserProfiles => Set<AuthUserProfile>();
+    public DbSet<AuthUserAuditLog> AuthUserAuditLogs => Set<AuthUserAuditLog>();
     public DbSet<ProjectChangelogEntry> ProjectChangelogEntries => Set<ProjectChangelogEntry>();
     public DbSet<KanbanTask> KanbanTasks => Set<KanbanTask>();
     public DbSet<KanbanTaskAuditLog> KanbanTaskAuditLogs => Set<KanbanTaskAuditLog>();
@@ -41,7 +43,48 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             entity.Property(x => x.PasswordHash).HasMaxLength(512).IsRequired();
             entity.Property(x => x.Role).HasMaxLength(64).IsRequired();
             entity.Property(x => x.IsActive).IsRequired();
+            entity.Property(x => x.AccessFailedCount).IsRequired();
             entity.HasIndex(x => new { x.TenantId, x.Email }).IsUnique();
+            entity.HasOne(x => x.Profile)
+                .WithOne(x => x.AuthUser)
+                .HasForeignKey<AuthUserProfile>(x => x.AuthUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(x => x.AuditLogs)
+                .WithOne(x => x.AuthUser)
+                .HasForeignKey(x => x.AuthUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
+        });
+
+        modelBuilder.Entity<AuthUserProfile>(entity =>
+        {
+            entity.ToTable("auth_user_profiles");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.FullName).HasMaxLength(256).IsRequired();
+            entity.Property(x => x.DisplayName).HasMaxLength(256);
+            entity.Property(x => x.PhoneE164).HasMaxLength(32);
+            entity.Property(x => x.JobTitle).HasMaxLength(128);
+            entity.Property(x => x.Department).HasMaxLength(128);
+            entity.Property(x => x.EmployeeCode).HasMaxLength(64);
+            entity.Property(x => x.TimeZone).HasMaxLength(64);
+            entity.Property(x => x.Locale).HasMaxLength(16);
+            entity.Property(x => x.AvatarUrl).HasMaxLength(2048);
+            entity.Property(x => x.EmergencyContactName).HasMaxLength(256);
+            entity.Property(x => x.EmergencyContactPhoneE164).HasMaxLength(32);
+            entity.Property(x => x.MetadataJson).HasColumnType("TEXT").HasDefaultValue("{}");
+            entity.HasIndex(x => new { x.TenantId, x.AuthUserId }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.EmployeeCode });
+            entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
+        });
+
+        modelBuilder.Entity<AuthUserAuditLog>(entity =>
+        {
+            entity.ToTable("auth_user_audit_logs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.EventType).HasMaxLength(64).IsRequired();
+            entity.Property(x => x.ChangedBy).HasMaxLength(256);
+            entity.Property(x => x.ChangedFieldsJson).HasColumnType("TEXT");
+            entity.HasIndex(x => new { x.TenantId, x.AuthUserId, x.CreatedAtUtc });
             entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
         });
 
