@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.7-modal-scroll] - 2026-04-17
+
+### Changed
+- Added vertical scrolling support to the Kanban task details modal when content exceeds viewport height.
+- Updated modal overlay layout to anchor from top with internal scroll, preventing clipped content on smaller screens or long evidence sections.
+
 ## [0.1.6-evidence-legacy-fallback] - 2026-04-17
 
 ### Changed
