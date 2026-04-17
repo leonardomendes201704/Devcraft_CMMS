@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using System.IO;
 
 namespace CMMS.Infrastructure;
 
@@ -18,13 +19,16 @@ public static class DependencyInjection
             "Development",
             StringComparison.OrdinalIgnoreCase);
 
-        var useInMemoryFallback = isDevelopment && !CanConnectToPostgres(connectionString);
+        var useSqliteFallback = isDevelopment && !CanConnectToPostgres(connectionString);
+        var fallbackSqlitePath = configuration["ConnectionStrings:DevelopmentFallbackSqlite"]
+            ?? Path.Combine(Environment.CurrentDirectory, "devcraft_cmms_dev_fallback.sqlite");
+        var fallbackSqliteConnectionString = $"Data Source={Path.GetFullPath(fallbackSqlitePath)}";
 
         services.AddDbContext<AppDbContext>(options =>
         {
-            if (useInMemoryFallback)
+            if (useSqliteFallback)
             {
-                options.UseInMemoryDatabase("devcraft_cmms_dev_fallback");
+                options.UseSqlite(fallbackSqliteConnectionString);
                 return;
             }
 
