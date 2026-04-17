@@ -72,7 +72,7 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   const createdTask = tasks.find((task) => task.title === taskTitle)
   expect(createdTask).toBeDefined()
 
-  await page.getByRole('heading', { name: taskTitle }).click()
+  await page.getByRole('heading', { name: taskTitle }).dblclick()
   await expect(page.getByRole('heading', { name: 'Evidence', exact: true })).toBeVisible()
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 7, 'task details modal opened')
 

@@ -366,14 +366,24 @@ export function KanbanPage() {
                   {columnTasks.map((task) => (
                     <div
                       key={task.id}
+                      role="article"
+                      tabIndex={0}
+                      data-testid="kanban-card"
+                      data-task-id={task.id}
+                      title="Duplo clique para abrir detalhes"
                       className={`cursor-grab rounded-xl border p-3 text-slate-900 active:cursor-grabbing ${style.card}`}
                       draggable
                       onDragStart={() => setDraggingTaskId(task.id)}
-                      onClick={() => setSelectedTaskId(task.id)}
+                      onDoubleClick={() => setSelectedTaskId(task.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          setSelectedTaskId(task.id)
+                        }
+                      }}
                     >
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <div>
-                          <p className="text-xs text-slate-700">{task.id}</p>
                           <h4 className="text-sm font-medium text-slate-900">{task.title}</h4>
                         </div>
                         <span className={`rounded px-2 py-0.5 text-[11px] ${style.badge}`}>{taskTypeLabel[task.type]}</span>
@@ -384,7 +394,12 @@ export function KanbanPage() {
 
                       <div className="mb-2 grid grid-cols-2 gap-2 text-xs">
                         <span className={`rounded border px-2 py-1 ${style.input}`}>Est: {task.estimateHours}h</span>
-                        <label className={`rounded border px-2 py-1 ${style.input}`}>
+                        <label
+                          className={`rounded border px-2 py-1 ${style.input}`}
+                          onClick={(event) => event.stopPropagation()}
+                          onDoubleClick={(event) => event.stopPropagation()}
+                          onMouseDown={(event) => event.stopPropagation()}
+                        >
                           Spent:
                           <input
                             className="ml-1 w-14 rounded border border-slate-300 bg-white px-1"
@@ -392,6 +407,10 @@ export function KanbanPage() {
                             min={0}
                             step={0.5}
                             value={task.spentHours}
+                            draggable={false}
+                            onClick={(event) => event.stopPropagation()}
+                            onDoubleClick={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => event.stopPropagation()}
                             onChange={(event) => updateSpentHours(task.id, Number(event.target.value))}
                           />
                           h
@@ -401,6 +420,10 @@ export function KanbanPage() {
                       <select
                         className="w-full rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-900"
                         value={task.status}
+                        draggable={false}
+                        onClick={(event) => event.stopPropagation()}
+                        onDoubleClick={(event) => event.stopPropagation()}
+                        onMouseDown={(event) => event.stopPropagation()}
                         onChange={(event) => updateTaskStatusById(task.id, event.target.value as TaskStatus)}
                       >
                         {getSelectableStatuses(task).map((value) => (

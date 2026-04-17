@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.22-kanban-card-ux] - 2026-04-17
+
+### Changed
+- KanbanPage: removido o guid (`task.id`) exibido no topo do card; identificacao agora aparece apenas dentro do modal de detalhes.
+- KanbanPage: abertura do modal de detalhes migrada de `onClick` para `onDoubleClick` no card. Suporte de teclado preservado via `tabIndex`/`onKeyDown` (Enter ou Space).
+- KanbanPage: cliques em `input type=number` (spent hours) e `select` (status) no card agora fazem `stopPropagation` de `click`/`doubleClick`/`mousedown`, impedindo que abram o modal indevidamente. Atributos `draggable=false` nesses controles para nao interferir no drag do card.
+- KanbanPage: trocado `role="button"` por `role="article"` no card com `data-testid="kanban-card"` e `data-task-id`, evitando colisao com locators `getByRole('button', ...)` do Playwright.
+
+### Added
+- Novo Playwright regression spec: `tests/cmms-web.playwright/tests/kanban-card-ux.spec.ts` validando (1) guid oculto no card, (2) clique simples + cliques em spent/status nao abrem o modal, (3) duplo clique abre o modal. Ancora o locator via `data-testid="kanban-card"`.
+
+### Fixed
+- `tests/cmms-web.playwright/tests/kanban.spec.ts`: trocado `.click()` por `.dblclick()` no passo que abre o modal de detalhes da task recem-criada, alinhando com o novo comportamento.
+
+Kanban task: `142be898-78e5-4095-bd42-68e7a1a5f729` (`[BUG] Cards do Kanban abrem modal ao clicar em inputs de status/spent`), start: `2026-04-17 20:20:33 -03:00`, end: `2026-04-17 20:25:25 -03:00`, spent final: `1.1h`, 5 evidencias Playwright anexadas.
+
 ## [0.1.21-language-policy-pt-br] - 2026-04-17
 
 ### Added
