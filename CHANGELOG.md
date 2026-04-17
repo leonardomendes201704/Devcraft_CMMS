@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.17-governance-changelog-preflight] - 2026-04-17
+
+### Added
+- Added changelog preflight mode in governance checker:
+  - `scripts/check-changelog.sh --working-tree`
+  - validates impactful files against `CHANGELOG.md` before commit attempt.
+
+### Changed
+- Updated governance and lessons artifacts to enforce changelog-first sequence:
+  - `AGENT.md`
+  - `guidelines/lessons-learned/lessons-learned.md`
+  - `guidelines/lessons-learned/command-decisions.md`
+
 ## [0.1.16-users-edit-remove-view-button] - 2026-04-17
 
 ### Changed

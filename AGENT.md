@@ -199,3 +199,8 @@ Cada entrega deve melhorar:
 - Solucao atual: `Devcraft_CMMS.slnx`
 - Em PowerShell Windows, usar `npm.cmd` quando necessario
 - Em instabilidade de memoria no build/teste global, executar build/test por projeto e registrar evidencia
+- Fluxo de commit obrigatorio:
+  1. Atualizar `CHANGELOG.md` antes de qualquer tentativa de commit
+  2. Rodar preflight: `bash scripts/check-changelog.sh --working-tree`
+  3. Executar validacoes (build/testes)
+  4. Commit e push

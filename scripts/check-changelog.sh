@@ -6,6 +6,15 @@ repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
 collect_files() {
+  if [[ "$mode" == "--working-tree" ]]; then
+    if git rev-parse --verify HEAD >/dev/null 2>&1; then
+      git diff --name-only --diff-filter=ACMR HEAD
+    else
+      git ls-files
+    fi
+    return
+  fi
+
   if [[ "$mode" == "--staged" ]]; then
     git diff --cached --name-only --diff-filter=ACMR
     return
