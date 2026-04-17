@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createAuthUser, type AuthRole } from '../../shared/api/users'
+import { PageHeader } from '../../shared/ui/PageHeader'
 import { UserForm } from './components/UserForm'
-import { UsersPageHeader } from './components/UsersPageHeader'
 import { extractErrorMessage } from './utils'
 
 export function UsersCreatePage() {
@@ -40,6 +40,12 @@ export function UsersCreatePage() {
     },
     onError: (error) => setSaveError(extractErrorMessage(error)),
   })
+  const noticeMessage = saveError
+    ? saveError
+    : createUserMutation.isPending
+      ? 'Saving changes...'
+      : null
+  const hasNoticeMessage = Boolean(noticeMessage?.trim())
 
   function handleSubmit() {
     const email = values.email.trim().toLowerCase()
@@ -74,7 +80,9 @@ export function UsersCreatePage() {
 
   return (
     <section className="mx-auto max-w-[1000px] text-slate-900">
-      <UsersPageHeader
+      <PageHeader
+        eyebrow="Access Control"
+        eyebrowClassName="text-emerald-700"
         title="Create User"
         subtitle="Register a new account with role and access status."
         actions={
@@ -84,10 +92,11 @@ export function UsersCreatePage() {
         }
       />
 
-      <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
-        {saveError ? saveError : null}
-        {createUserMutation.isPending ? 'Saving changes...' : null}
-      </section>
+      {hasNoticeMessage ? (
+        <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          {noticeMessage}
+        </section>
+      ) : null}
 
       <section className="rounded-2xl border border-slate-200 bg-white/90 p-4">
         <h2 className="mb-3 text-lg font-semibold">New User</h2>

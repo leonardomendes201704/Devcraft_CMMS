@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getAuthUserById } from '../../shared/api/users'
+import { PageHeader } from '../../shared/ui/PageHeader'
 import { UserSummaryCard } from './components/UserSummaryCard'
-import { UsersPageHeader } from './components/UsersPageHeader'
 
 export function UsersViewPage() {
   const { userId = '' } = useParams()
@@ -12,10 +12,16 @@ export function UsersViewPage() {
     queryFn: () => getAuthUserById(userId),
     enabled: Boolean(userId),
   })
+  const noticeMessage = userQuery.isError
+    ? 'Failed to load user details.'
+    : null
+  const hasNoticeMessage = Boolean(noticeMessage?.trim())
 
   return (
     <section className="mx-auto max-w-[1000px] text-slate-900">
-      <UsersPageHeader
+      <PageHeader
+        eyebrow="Access Control"
+        eyebrowClassName="text-emerald-700"
         title="User Details"
         subtitle="Read-only user profile details."
         actions={
@@ -32,10 +38,11 @@ export function UsersViewPage() {
         }
       />
 
-      <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
-        {userQuery.isLoading ? 'Loading user details...' : null}
-        {userQuery.isError ? 'Failed to load user details.' : null}
-      </section>
+      {hasNoticeMessage ? (
+        <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          {noticeMessage}
+        </section>
+      ) : null}
 
       {userQuery.data ? <UserSummaryCard user={userQuery.data} /> : null}
     </section>

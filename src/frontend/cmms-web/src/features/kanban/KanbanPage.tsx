@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { listProjectChangelog } from '../../shared/api/changelog'
 import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
+import { PageHeader } from '../../shared/ui/PageHeader'
 import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskEvidence, type TaskStatus, type TaskType } from './types'
 
 export function KanbanPage() {
@@ -292,21 +293,18 @@ export function KanbanPage() {
   return (
     <section className="text-slate-900">
       <div className="mx-auto max-w-[1500px]">
-        <header className="mb-6 rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-lg shadow-slate-200/70 backdrop-blur">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-sky-700">Operational Board</p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight">Devcraft CMMS - Kanban</h1>
-            </div>
-
+        <PageHeader
+          eyebrow="Operational Board"
+          title="Devcraft CMMS - Kanban"
+          aside={
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <MetricCard label="Tasks" value={String(totals.count)} />
               <MetricCard label="Estimate (h)" value={totals.estimate.toFixed(1)} />
               <MetricCard label="Spent (h)" value={totals.spent.toFixed(1)} />
               <MetricCard label="Closed Effort (h)" value={totals.completedSpent.toFixed(1)} />
             </div>
-          </div>
-        </header>
+          }
+        />
 
         <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
           {tasksQuery.isLoading ? 'Loading tasks from API...' : null}
@@ -769,7 +767,7 @@ function formatLocalTimestamp(value: string): string {
 }
 
 function parseUtcTimestamp(value: string): Date {
-  // Legacy SQLite rows may not include timezone suffix. Treat them as UTC.
+  // Legacy rows without timezone suffix are interpreted as UTC.
   const normalized = /([zZ]|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`
   return new Date(normalized)
 }

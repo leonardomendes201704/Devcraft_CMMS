@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAuthUserById, resetAuthUserPassword, updateAuthUser } from '../../shared/api/users'
+import { PageHeader } from '../../shared/ui/PageHeader'
 import { UserForm, type UserFormValues } from './components/UserForm'
-import { UsersPageHeader } from './components/UsersPageHeader'
 import { extractErrorMessage } from './utils'
 
 const defaultValues: UserFormValues = {
@@ -107,6 +107,14 @@ export function UsersEditPage() {
     },
     onError: (error) => setSaveError(extractErrorMessage(error)),
   })
+  const noticeMessage = userQuery.isError
+    ? 'Failed to load user details.'
+    : saveError
+      ? saveError
+      : updateUserMutation.isPending || resetPasswordMutation.isPending
+        ? 'Saving changes...'
+        : null
+  const hasNoticeMessage = Boolean(noticeMessage?.trim())
 
   function handleSave() {
     if (!values.fullName.trim()) {
@@ -130,7 +138,9 @@ export function UsersEditPage() {
 
   return (
     <section className="mx-auto max-w-[1000px] text-slate-900">
-      <UsersPageHeader
+      <PageHeader
+        eyebrow="Access Control"
+        eyebrowClassName="text-emerald-700"
         title="Edit User"
         subtitle="Update role/status and reset credentials."
         actions={
@@ -140,12 +150,11 @@ export function UsersEditPage() {
         }
       />
 
-      <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
-        {userQuery.isLoading ? 'Loading user details...' : null}
-        {userQuery.isError ? 'Failed to load user details.' : null}
-        {saveError ? saveError : null}
-        {updateUserMutation.isPending || resetPasswordMutation.isPending ? 'Saving changes...' : null}
-      </section>
+      {hasNoticeMessage ? (
+        <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+          {noticeMessage}
+        </section>
+      ) : null}
 
       {userQuery.data ? (
         <>

@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.19-users-list-ui-kit-componentization] - 2026-04-17
+
+### Added
+- Added reusable list UI kit under `shared/ui/list`:
+  - `ListSection`
+  - `ListToolbar`
+  - `DataGrid`
+  - `ListPagination`
+  - `SortIcon`
+- Added generic list state hook `useListState<TSortKey, TFilters>` under `shared/hooks` for search/filter/sort/pagination state.
+
+### Changed
+- Refactored Users Administration list page to consume shared list kit components.
+- Replaced page-local sort icon implementations with shared `SortIcon`.
+- Reduced `UsersListPage` coupling by keeping only domain-specific filter/sort/render rules.
+
 ## [0.1.18-users-profile-entity-audit-hardening] - 2026-04-17
 
 ### Added
@@ -129,7 +145,7 @@
   - `AuthRoles` constants and allowed role set
   - `AuthorizationPolicies` constants
   - `CredentialPolicy` password validation rules
-- Added startup schema bootstrap for `auth_users` in both SQLite and PostgreSQL environments.
+- Added startup schema bootstrap for `auth_users` in database environments.
 
 ### Changed
 - Enforced `AdminMasterOnly` authorization policy on protected controllers (`tasks`, `bootstrap`, `changelog`).

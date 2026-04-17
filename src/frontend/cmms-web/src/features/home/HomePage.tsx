@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { getApiHealth } from '../../shared/api/health'
+import { PageHeader } from '../../shared/ui/PageHeader'
 
 export function HomePage() {
   const { t } = useTranslation()
@@ -12,11 +13,7 @@ export function HomePage() {
 
   return (
     <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-      <article className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-lg shadow-slate-200/60">
-        <p className="text-xs uppercase tracking-[0.2em] text-sky-700">Operations</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">{t('title')}</h1>
-        <p className="mt-2 text-sm text-slate-600">{t('subtitle')}</p>
-      </article>
+      <PageHeader eyebrow="Operations" title={t('title')} subtitle={t('subtitle')} className="mb-0 shadow-slate-200/60" />
 
       <article className="rounded-2xl border border-slate-200 bg-white/90 p-5 shadow-lg shadow-slate-200/60">
         <h2 className="text-sm font-semibold text-slate-700">{t('apiStatus')}</h2>
