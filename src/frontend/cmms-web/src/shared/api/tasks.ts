@@ -109,7 +109,8 @@ function toKanbanTask(task: ApiKanbanTask): KanbanTask {
 }
 
 function toTaskEvidence(evidence: ApiTaskEvidence): TaskEvidence {
-  const kind = evidence.kind === 'api' ? 'api' : 'image'
+  const hasPayload = typeof evidence.payloadJson === 'string' && evidence.payloadJson.trim().length > 0
+  const kind = evidence.kind === 'api' || hasPayload ? 'api' : 'image'
   return {
     id: evidence.id,
     title: evidence.title ?? 'Evidence',

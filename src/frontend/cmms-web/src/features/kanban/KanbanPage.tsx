@@ -478,7 +478,7 @@ export function KanbanPage() {
               ) : (
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   {selectedTask.evidences.map((evidence) => (
-                    evidence.kind === 'api' ? (
+                    isApiEvidence(evidence) ? (
                       <div key={evidence.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm">
                         <div className="flex h-28 items-center justify-center bg-slate-900 px-2 text-center text-xs font-semibold uppercase tracking-wide text-emerald-300">
                           API Evidence (JSON)
@@ -500,7 +500,7 @@ export function KanbanPage() {
                         type="button"
                         onClick={() => setLightboxEvidence(evidence)}
                       >
-                        {failedEvidenceImages[evidence.id] ? (
+                        {!resolveEvidenceUrl(evidence.imageUrl) || failedEvidenceImages[evidence.id] ? (
                           <div className="flex h-28 w-full items-center justify-center bg-slate-100 px-2 text-center text-xs text-slate-500">
                             Image unavailable
                           </div>
@@ -524,11 +524,11 @@ export function KanbanPage() {
                 </div>
               )}
             </section>
-            {selectedTask.evidences.some((evidence) => evidence.kind === 'api') ? (
+            {selectedTask.evidences.some((evidence) => isApiEvidence(evidence)) ? (
               <section className="mt-4 space-y-2">
                 <h3 className="text-sm font-semibold text-slate-900">API Payloads</h3>
                 {selectedTask.evidences
-                  .filter((evidence) => evidence.kind === 'api')
+                  .filter((evidence) => isApiEvidence(evidence))
                   .map((evidence) => (
                     <article key={`${evidence.id}-payload`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                       <p className="text-xs font-semibold text-slate-900">{evidence.title}</p>
@@ -705,6 +705,14 @@ function resolveEvidenceUrl(imageUrl: string): string {
   }
 
   return encodeURI(`/${imageUrl}`)
+}
+
+function isApiEvidence(evidence: TaskEvidence): boolean {
+  if (evidence.kind === 'api') {
+    return true
+  }
+
+  return typeof evidence.payloadJson === 'string' && evidence.payloadJson.trim().length > 0
 }
 
 function formatApiPayload(payloadJson: string | null): string {

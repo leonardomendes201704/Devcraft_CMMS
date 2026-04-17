@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6-evidence-legacy-fallback] - 2026-04-17
+
+### Changed
+- Fixed Kanban evidence rendering for legacy records where evidence `kind` is missing or inconsistent.
+- Frontend now infers API evidence when `payloadJson` is present, even if `kind` is not `api`.
+- Prevented broken image rendering for evidence entries with empty/invalid image URLs by showing an explicit unavailable fallback state.
+
 ## [0.1.5-evidence-gate] - 2026-04-17
 
 ### Added
