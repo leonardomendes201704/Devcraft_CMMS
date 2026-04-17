@@ -15,6 +15,7 @@
 | TASK-REQ-2026-04-17-05 | Corrigir disciplina Task First e fluxo de estados no Kanban | closed | high | Fluxo de status validado com bloqueio de fechamento antecipado |
 | TASK-REQ-2026-04-17-06 | Configurar ambiente Docker com PostgreSQL e migrar dados do fallback | active | high | Kanban API task: `e7235369-c8e8-42e7-a5b6-85b765205b75` |
 | TASK-REQ-2026-04-17-07 | Hardening: exigir apontamento de esforco antes de fechar task | closed | high | Kanban API task: `ccdc0477-4c33-49aa-b04a-ba4dcfefa6e9`, spent final: `1.2h` |
+| TASK-REQ-2026-04-17-08 | Diretriz operacional: start local + active e entrega com close + tempo gasto, mantendo app rodando | closed | high | Kanban API task: `03c5c86f-e514-4f70-abea-ce2ecae1f7f2`, start: `2026-04-17 12:01:09 -03:00`, end: `2026-04-17 12:02:16 -03:00`, spent final: `0.1h` |
 
 ## Transition Log
 
@@ -32,6 +33,9 @@
 | TASK-REQ-2026-04-17-07 | active -> resolved | 2026-04-17T15:00:00Z | Backend + frontend + CLI atualizados e validados |
 | TASK-REQ-2026-04-17-07 | resolved -> closed | 2026-04-17T15:02:00Z | Task API `ccdc...` fechada com spentHours=1.2 |
 | TASK-REQ-2026-04-17-06 | new -> active | 2026-04-17T15:03:00Z | Planejamento de docker/postgres mantido em andamento |
+| TASK-REQ-2026-04-17-08 | new -> active | 2026-04-17 12:01:09 -03:00 (LOCAL) | Solicitacao recebida e task iniciada com timestamp local conforme diretriz |
+| TASK-REQ-2026-04-17-08 | active -> resolved | 2026-04-17 12:02:16 -03:00 (LOCAL) | Diretriz formalizada no repositorio e checklist aplicado |
+| TASK-REQ-2026-04-17-08 | resolved -> closed | 2026-04-17 12:02:16 -03:00 (LOCAL) | Task fechada com `spentHours` calculado (`0.1h`) |
 
 ## Baseline Done
 

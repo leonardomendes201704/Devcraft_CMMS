@@ -16,6 +16,7 @@ Central index of engineering rules by context.
 - lessons-learned
 - commands
 - troubleshooting
+- workflows
 
 ## How To Use
 
