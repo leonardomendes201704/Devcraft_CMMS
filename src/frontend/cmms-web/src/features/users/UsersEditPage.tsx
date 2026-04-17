@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAuthUserById, resetAuthUserPassword, updateAuthUser, type AuthRole } from '../../shared/api/users'
 import { UserForm } from './components/UserForm'
-import { UserSummaryCard } from './components/UserSummaryCard'
 import { UsersPageHeader } from './components/UsersPageHeader'
 import { extractErrorMessage } from './utils'
 
 export function UsersEditPage() {
   const { userId = '' } = useParams()
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [saveError, setSaveError] = useState<string | null>(null)
   const [resetPassword, setResetPassword] = useState('')
@@ -83,20 +81,9 @@ export function UsersEditPage() {
         title="Edit User"
         subtitle="Update role/status and reset credentials."
         actions={
-          <>
-            <Link className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100" to="/app/admin/users">
-              Back to list
-            </Link>
-            {userId ? (
-              <button
-                className="rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white hover:bg-sky-500"
-                type="button"
-                onClick={() => navigate(`/app/admin/users/${userId}`)}
-              >
-                View user
-              </button>
-            ) : null}
-          </>
+          <Link className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100" to="/app/admin/users">
+            Back to list
+          </Link>
         }
       />
 
@@ -143,7 +130,6 @@ export function UsersEditPage() {
             </div>
           </section>
 
-          <UserSummaryCard user={userQuery.data} />
         </>
       ) : null}
     </section>

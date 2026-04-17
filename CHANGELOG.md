@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.16-users-edit-remove-view-button] - 2026-04-17
+
+### Changed
+- Removed `View user` button from the user edit page actions.
+- Kept only `Back to list` action to simplify the edit screen.
+
 ## [0.1.15-users-list-search-filter-pagination] - 2026-04-17
 
 ### Added
