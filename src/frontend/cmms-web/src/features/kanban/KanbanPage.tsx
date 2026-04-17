@@ -1,11 +1,14 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { listProjectChangelog } from '../../shared/api/changelog'
 import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
+import { clearAccessToken } from '../../shared/auth/session'
 import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskEvidence, type TaskStatus, type TaskType } from './types'
 
 export function KanbanPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const tasksQuery = useQuery({
     queryKey: ['kanban-tasks'],
@@ -24,6 +27,8 @@ export function KanbanPage() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [lightboxEvidence, setLightboxEvidence] = useState<TaskEvidence | null>(null)
   const [isChangelogOpen, setIsChangelogOpen] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [failedEvidenceImages, setFailedEvidenceImages] = useState<Record<string, boolean>>({})
 
   const changelogQuery = useQuery({
     queryKey: ['project-changelog'],
@@ -47,22 +52,38 @@ export function KanbanPage() {
 
   const createTaskMutation = useMutation({
     mutationFn: createTask,
-    onSuccess: refreshTasks,
+    onSuccess: () => {
+      setSaveError(null)
+      refreshTasks()
+    },
+    onError: (error) => setSaveError(extractErrorMessage(error)),
   })
 
   const statusMutation = useMutation({
     mutationFn: ({ taskId, status }: { taskId: string; status: Exclude<TaskStatus, 'closed'> }) => updateTaskStatus(taskId, status),
-    onSuccess: refreshTasks,
+    onSuccess: () => {
+      setSaveError(null)
+      refreshTasks()
+    },
+    onError: (error) => setSaveError(extractErrorMessage(error)),
   })
 
   const effortMutation = useMutation({
     mutationFn: ({ taskId, spentHours }: { taskId: string; spentHours: number }) => updateTaskEffort(taskId, spentHours),
-    onSuccess: refreshTasks,
+    onSuccess: () => {
+      setSaveError(null)
+      refreshTasks()
+    },
+    onError: (error) => setSaveError(extractErrorMessage(error)),
   })
 
   const completeMutation = useMutation({
     mutationFn: ({ taskId }: { taskId: string }) => completeTask(taskId),
-    onSuccess: refreshTasks,
+    onSuccess: () => {
+      setSaveError(null)
+      refreshTasks()
+    },
+    onError: (error) => setSaveError(extractErrorMessage(error)),
   })
 
   const filteredTasks = useMemo(() => {
@@ -107,6 +128,8 @@ export function KanbanPage() {
       return
     }
 
+    setSaveError(null)
+
     if (status === 'closed') {
       completeMutation.mutate({ taskId })
       return
@@ -117,6 +140,7 @@ export function KanbanPage() {
 
   function updateSpentHours(taskId: string, spentHours: number) {
     const normalized = Number.isFinite(spentHours) ? Math.max(0, spentHours) : 0
+    setSaveError(null)
     effortMutation.mutate({ taskId, spentHours: normalized })
   }
 
@@ -129,6 +153,8 @@ export function KanbanPage() {
     if (!title || !description || !moduleName) {
       return
     }
+
+    setSaveError(null)
 
     createTaskMutation.mutate(
       {
@@ -150,6 +176,11 @@ export function KanbanPage() {
         },
       },
     )
+  }
+
+  function handleLogout() {
+    clearAccessToken()
+    navigate('/login', { replace: true })
   }
 
   const isSaving = createTaskMutation.isPending || statusMutation.isPending || effortMutation.isPending || completeMutation.isPending
@@ -207,6 +238,7 @@ export function KanbanPage() {
         <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
           {tasksQuery.isLoading ? 'Loading tasks from API...' : null}
           {tasksQuery.isError ? 'Failed to load tasks. Verify API and tenant header.' : null}
+          {saveError ? saveError : null}
           {isSaving ? 'Saving changes...' : null}
         </section>
 
@@ -228,13 +260,20 @@ export function KanbanPage() {
           </button>
         </section>
 
-        <section className="mb-4 flex justify-end">
+        <section className="mb-4 flex justify-end gap-2">
           <button
             className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             type="button"
             onClick={() => setIsChangelogOpen(true)}
           >
             View changelog
+          </button>
+          <button
+            className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-100"
+            type="button"
+            onClick={handleLogout}
+          >
+            Logout
           </button>
         </section>
 
@@ -439,32 +478,74 @@ export function KanbanPage() {
               ) : (
                 <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                   {selectedTask.evidences.map((evidence) => (
-                    <button
-                      key={evidence.id}
-                      className="group overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm"
-                      type="button"
-                      onClick={() => setLightboxEvidence(evidence)}
-                    >
-                      <img
-                        alt={evidence.title}
-                        className="h-28 w-full object-cover transition duration-200 group-hover:scale-[1.03]"
-                        src={resolveEvidenceUrl(evidence.imageUrl)}
-                      />
-                      <div className="space-y-1 p-2">
-                        <p className="line-clamp-1 text-xs font-medium text-slate-900">{evidence.title}</p>
-                        <p className="text-[11px] text-slate-500">
-                          {formatLocalTimestamp(evidence.capturedAtUtc)} - {evidence.source}
-                        </p>
+                    evidence.kind === 'api' ? (
+                      <div key={evidence.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm">
+                        <div className="flex h-28 items-center justify-center bg-slate-900 px-2 text-center text-xs font-semibold uppercase tracking-wide text-emerald-300">
+                          API Evidence (JSON)
+                        </div>
+                        <div className="space-y-1 p-2">
+                          <p className="line-clamp-1 text-xs font-medium text-slate-900">{evidence.title}</p>
+                          <p className="line-clamp-3 rounded border border-slate-200 bg-slate-50 p-1 text-[11px] text-slate-700">
+                            {getApiEvidencePreview(evidence)}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            {formatLocalTimestamp(evidence.capturedAtUtc)} - {evidence.source}
+                          </p>
+                        </div>
                       </div>
-                    </button>
+                    ) : (
+                      <button
+                        key={evidence.id}
+                        className="group overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm"
+                        type="button"
+                        onClick={() => setLightboxEvidence(evidence)}
+                      >
+                        {failedEvidenceImages[evidence.id] ? (
+                          <div className="flex h-28 w-full items-center justify-center bg-slate-100 px-2 text-center text-xs text-slate-500">
+                            Image unavailable
+                          </div>
+                        ) : (
+                          <img
+                            alt={evidence.title}
+                            className="h-28 w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                            src={resolveEvidenceUrl(evidence.imageUrl)}
+                            onError={() => setFailedEvidenceImages((current) => ({ ...current, [evidence.id]: true }))}
+                          />
+                        )}
+                        <div className="space-y-1 p-2">
+                          <p className="line-clamp-1 text-xs font-medium text-slate-900">{evidence.title}</p>
+                          <p className="text-[11px] text-slate-500">
+                            {formatLocalTimestamp(evidence.capturedAtUtc)} - {evidence.source}
+                          </p>
+                        </div>
+                      </button>
+                    )
                   ))}
                 </div>
               )}
             </section>
+            {selectedTask.evidences.some((evidence) => evidence.kind === 'api') ? (
+              <section className="mt-4 space-y-2">
+                <h3 className="text-sm font-semibold text-slate-900">API Payloads</h3>
+                {selectedTask.evidences
+                  .filter((evidence) => evidence.kind === 'api')
+                  .map((evidence) => (
+                    <article key={`${evidence.id}-payload`} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                      <p className="text-xs font-semibold text-slate-900">{evidence.title}</p>
+                      <p className="mb-2 text-[11px] text-slate-500">
+                        {formatLocalTimestamp(evidence.capturedAtUtc)} - {evidence.source}
+                      </p>
+                      <pre className="max-h-48 overflow-auto rounded border border-slate-200 bg-white p-2 text-[11px] text-slate-800">
+                        {formatApiPayload(evidence.payloadJson)}
+                      </pre>
+                    </article>
+                  ))}
+              </section>
+            ) : null}
           </article>
         </div>
       ) : null}
-      {lightboxEvidence ? (
+      {lightboxEvidence && lightboxEvidence.kind === 'image' ? (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/85 p-4"
           onClick={() => setLightboxEvidence(null)}
@@ -607,13 +688,55 @@ function parseUtcTimestamp(value: string): Date {
 }
 
 function resolveEvidenceUrl(imageUrl: string): string {
+  if (!imageUrl?.trim()) {
+    return ''
+  }
+
   if (/^https?:\/\//i.test(imageUrl)) {
-    return imageUrl
+    return encodeURI(imageUrl)
   }
 
   if (imageUrl.startsWith('/')) {
-    return imageUrl
+    return encodeURI(imageUrl)
   }
 
-  return `/${imageUrl}`
+  if (/^[a-zA-Z]:\\/.test(imageUrl)) {
+    return ''
+  }
+
+  return encodeURI(`/${imageUrl}`)
+}
+
+function formatApiPayload(payloadJson: string | null): string {
+  const parsed = parseApiPayload(payloadJson)
+  if (parsed === null) {
+    return payloadJson?.trim() || 'No payload content.'
+  }
+
+  return JSON.stringify(parsed, null, 2)
+}
+
+function getApiEvidencePreview(evidence: TaskEvidence): string {
+  const raw = formatApiPayload(evidence.payloadJson)
+  return raw.length > 180 ? `${raw.slice(0, 180)}...` : raw
+}
+
+function parseApiPayload(payloadJson: string | null): unknown | null {
+  if (!payloadJson?.trim()) {
+    return null
+  }
+
+  try {
+    return JSON.parse(payloadJson)
+  } catch {
+    return null
+  }
+}
+
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim()
+  }
+
+  return 'Operation failed. Please review task rules and try again.'
 }

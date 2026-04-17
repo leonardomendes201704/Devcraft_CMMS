@@ -22,7 +22,9 @@ export interface KanbanTask {
 export interface TaskEvidence {
   id: string
   title: string
+  kind: 'image' | 'api'
   imageUrl: string
+  payloadJson: string | null
   source: string
   capturedAtUtc: string
 }

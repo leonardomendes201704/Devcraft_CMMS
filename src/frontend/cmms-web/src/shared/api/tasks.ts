@@ -4,7 +4,9 @@ import { apiFetch } from './http'
 type ApiTaskEvidence = {
   id: string
   title: string
+  kind?: 'image' | 'api'
   imageUrl: string
+  payloadJson?: string | null
   source: string
   capturedAtUtc: string
 }
@@ -37,7 +39,9 @@ type CreateTaskPayload = {
 
 type AddTaskEvidencePayload = {
   title: string
-  imageUrl: string
+  kind?: 'image' | 'api'
+  imageUrl?: string
+  payloadJson?: string
   source?: string
   capturedAtUtc?: string
 }
@@ -105,10 +109,13 @@ function toKanbanTask(task: ApiKanbanTask): KanbanTask {
 }
 
 function toTaskEvidence(evidence: ApiTaskEvidence): TaskEvidence {
+  const kind = evidence.kind === 'api' ? 'api' : 'image'
   return {
     id: evidence.id,
     title: evidence.title ?? 'Evidence',
+    kind,
     imageUrl: evidence.imageUrl ?? '',
+    payloadJson: evidence.payloadJson ?? null,
     source: evidence.source ?? 'manual',
     capturedAtUtc: evidence.capturedAtUtc,
   }

@@ -1,17 +1,29 @@
 using CMMS.Domain.Tasks;
 using CMMS.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text;
 
 namespace CMMS.Api.Controllers;
 
 [ApiController]
 [Route("api/tasks")]
+[Authorize]
 public sealed class TasksController(AppDbContext dbContext) : ControllerBase
 {
     private readonly AppDbContext _dbContext = dbContext;
+    private static readonly string[] FrontendFlowKeywords =
+    [
+        "frontend", "front-end", "web", "ui", "ux", "react", "page", "modal", "kanban", "playwright", "e2e"
+    ];
+
+    private static readonly string[] ApiFlowKeywords =
+    [
+        "api", "backend", "endpoint", "controller", "payload", "json", "postman", "auth", "swagger", "integration"
+    ];
 
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<KanbanTaskResponse>>> ListAsync(CancellationToken cancellationToken)
@@ -177,6 +189,13 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
             return BadRequest(CreateValidationProblemDetails(nameof(task.SpentHours), "Task must have spentHours greater than 0 before close."));
         }
 
+        var evidences = DeserializeEvidencesJson(task.EvidenceJson);
+        var evidenceValidation = ValidateRequiredEvidence(task, evidences);
+        if (evidenceValidation.Count > 0)
+        {
+            return BadRequest(new ValidationProblemDetails(evidenceValidation));
+        }
+
         var previousStatus = task.Status;
         var closedAtUtc = DateTime.UtcNow;
         var leadTimeHours = Math.Round((decimal)(closedAtUtc - task.CreatedAtUtc).TotalHours, 2);
@@ -226,10 +245,28 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
             return BadRequest(CreateValidationProblemDetails(nameof(request.Title), "Title is required."));
         }
 
-        var imageUrl = request.ImageUrl?.Trim() ?? string.Empty;
-        if (imageUrl.Length == 0)
+        var kind = NormalizeEvidenceKind(request.Kind);
+        if (kind is null)
         {
-            return BadRequest(CreateValidationProblemDetails(nameof(request.ImageUrl), "ImageUrl is required."));
+            return BadRequest(CreateValidationProblemDetails(nameof(request.Kind), "Kind must be either 'image' or 'api'."));
+        }
+
+        var imageUrl = request.ImageUrl?.Trim() ?? string.Empty;
+        var payloadJson = request.PayloadJson?.Trim();
+
+        if (kind == "image" && imageUrl.Length == 0)
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(request.ImageUrl), "ImageUrl is required for image evidence."));
+        }
+
+        if (kind == "api" && string.IsNullOrWhiteSpace(payloadJson))
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(request.PayloadJson), "PayloadJson is required for api evidence."));
+        }
+
+        if (kind == "api" && !IsValidJson(payloadJson!))
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(request.PayloadJson), "PayloadJson must contain valid JSON."));
         }
 
         var evidences = DeserializeEvidencesJson(task.EvidenceJson);
@@ -237,7 +274,9 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
         {
             Id = Guid.NewGuid(),
             Title = title,
+            Kind = kind,
             ImageUrl = imageUrl,
+            PayloadJson = kind == "api" ? payloadJson : null,
             CapturedAtUtc = request.CapturedAtUtc ?? DateTime.UtcNow,
             Source = string.IsNullOrWhiteSpace(request.Source) ? "manual" : request.Source.Trim()
         });
@@ -270,6 +309,83 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
         {
             [field] = [message]
         });
+    }
+
+    private static string? NormalizeEvidenceKind(string? kind)
+    {
+        if (string.IsNullOrWhiteSpace(kind))
+        {
+            return "image";
+        }
+
+        var normalized = kind.Trim().ToLowerInvariant();
+        return normalized is "image" or "api" ? normalized : null;
+    }
+
+    private static Dictionary<string, string[]> ValidateRequiredEvidence(KanbanTask task, IReadOnlyList<KanbanTaskEvidence> evidences)
+    {
+        var normalized = BuildSearchableTaskText(task);
+        var requiresFrontendEvidence = FrontendFlowKeywords.Any(keyword => normalized.Contains(keyword));
+        var requiresApiEvidence = ApiFlowKeywords.Any(keyword => normalized.Contains(keyword));
+
+        var validationErrors = new Dictionary<string, string[]>();
+        if (requiresFrontendEvidence)
+        {
+            var hasFrontendEvidence = evidences.Any(evidence =>
+                NormalizeEvidenceKind(evidence.Kind) == "image" &&
+                !string.IsNullOrWhiteSpace(evidence.ImageUrl));
+
+            if (!hasFrontendEvidence)
+            {
+                validationErrors["evidences.frontend"] =
+                [
+                    "Frontend-related task requires at least one image evidence before close."
+                ];
+            }
+        }
+
+        if (requiresApiEvidence)
+        {
+            var hasApiEvidence = evidences.Any(evidence =>
+                NormalizeEvidenceKind(evidence.Kind) == "api" &&
+                !string.IsNullOrWhiteSpace(evidence.PayloadJson));
+
+            if (!hasApiEvidence)
+            {
+                validationErrors["evidences.api"] =
+                [
+                    "API-related task requires at least one API evidence with JSON payload/response before close."
+                ];
+            }
+        }
+
+        return validationErrors;
+    }
+
+    private static string BuildSearchableTaskText(KanbanTask task)
+    {
+        var builder = new StringBuilder();
+        builder.Append(task.Title);
+        builder.Append(' ');
+        builder.Append(task.Description);
+        builder.Append(' ');
+        builder.Append(task.Module);
+        builder.Append(' ');
+        builder.Append(task.Type);
+        return builder.ToString().ToLowerInvariant();
+    }
+
+    private static bool IsValidJson(string payloadJson)
+    {
+        try
+        {
+            JsonDocument.Parse(payloadJson);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static bool IsAllowedStatusTransition(string current, string next)
@@ -342,8 +458,14 @@ public sealed class AddTaskEvidenceRequest
     [Required, MaxLength(256)]
     public string Title { get; init; } = string.Empty;
 
-    [Required, MaxLength(2048)]
-    public string ImageUrl { get; init; } = string.Empty;
+    [MaxLength(16)]
+    public string? Kind { get; init; }
+
+    [MaxLength(2048)]
+    public string? ImageUrl { get; init; }
+
+    [MaxLength(24000)]
+    public string? PayloadJson { get; init; }
 
     [MaxLength(64)]
     public string? Source { get; init; }
@@ -354,7 +476,9 @@ public sealed class AddTaskEvidenceRequest
 public sealed record KanbanTaskEvidenceResponse(
     Guid Id,
     string Title,
+    string Kind,
     string ImageUrl,
+    string? PayloadJson,
     string Source,
     DateTime CapturedAtUtc);
 
@@ -387,7 +511,9 @@ public static class KanbanTaskMappings
             .Select(x => new KanbanTaskEvidenceResponse(
                 x.Id,
                 x.Title,
+                NormalizeEvidenceKindForResponse(x.Kind),
                 x.ImageUrl,
+                x.PayloadJson,
                 x.Source,
                 DateTime.SpecifyKind(x.CapturedAtUtc, DateTimeKind.Utc)))
             .ToList();
@@ -424,5 +550,15 @@ public static class KanbanTaskMappings
         {
             return [];
         }
+    }
+
+    private static string NormalizeEvidenceKindForResponse(string? kind)
+    {
+        if (string.Equals(kind, "api", StringComparison.OrdinalIgnoreCase))
+        {
+            return "api";
+        }
+
+        return "image";
     }
 }

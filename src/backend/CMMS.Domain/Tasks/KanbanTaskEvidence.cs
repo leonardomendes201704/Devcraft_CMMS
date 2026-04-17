@@ -4,7 +4,9 @@ public sealed class KanbanTaskEvidence
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = string.Empty;
+    public string Kind { get; set; } = "image";
     public string ImageUrl { get; set; } = string.Empty;
+    public string? PayloadJson { get; set; }
     public DateTime CapturedAtUtc { get; set; }
     public string Source { get; set; } = "manual";
 }

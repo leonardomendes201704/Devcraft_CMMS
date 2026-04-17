@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.1.5-evidence-gate] - 2026-04-17
+
+### Added
+- Added support for task evidence kind `api` with JSON payload storage and response mapping in Kanban task API.
+- Added Playwright scenario validating that frontend/API tasks cannot be closed without required evidences.
+- Added fallback placeholder evidence asset for UI/API smoke and test flows.
+
+### Changed
+- Enforced close gate on `/api/tasks/{id}/complete`:
+  - frontend-related flows now require at least one image evidence;
+  - API-related flows now require at least one JSON payload/response evidence.
+- Improved evidence modal rendering to support both image and API evidences with JSON preview/details.
+- Improved frontend API error parsing so validation messages from backend are shown clearly in Kanban.
+- Hardened evidence image URL resolution and graceful fallback when an image cannot be loaded.
+
+## [0.1.4-auth-login] - 2026-04-17
+
+### Added
+- Added backend login endpoint `POST /api/auth/login` with JWT token issuance for the master admin account.
+- Added frontend login page and auth session helpers to persist access token and route authenticated users to Kanban.
+- Added auth API client and bearer token propagation in shared HTTP layer.
+
+### Changed
+- Protected task, changelog, and bootstrap API controllers with authorization.
+- Added logout action and auth-aware route guards in frontend router.
+- Updated Playwright tests to validate authenticated flow and login UI.
+- Registered bootstrap master admin credentials in API appsettings for local startup:
+  - `admin@cmms.local`
+  - `Naotemsenha0(`
+
 ## [0.1.3-docker-ports] - 2026-04-17
 
 ### Changed
