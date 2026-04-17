@@ -1,4 +1,5 @@
 using CMMS.Api.Tenancy;
+using CMMS.Api.Auth;
 using CMMS.Application;
 using CMMS.Domain.Auth;
 using CMMS.Domain.Project;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -35,13 +37,20 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressModelStateInvalidFilter = false;
 });
 
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+if (string.IsNullOrWhiteSpace(jwtSettings.Key) || jwtSettings.Key.Length < 32)
+{
+    throw new InvalidOperationException("Jwt:Key must be configured with at least 32 characters.");
+}
+
+var issuer = string.IsNullOrWhiteSpace(jwtSettings.Issuer) ? "Devcraft.CMMS" : jwtSettings.Issuer.Trim();
+var audience = string.IsNullOrWhiteSpace(jwtSettings.Audience) ? "Devcraft.CMMS.Web" : jwtSettings.Audience.Trim();
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
+var clockSkewMinutes = Math.Max(0, jwtSettings.ClockSkewMinutes);
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var issuer = builder.Configuration["Jwt:Issuer"];
-        var audience = builder.Configuration["Jwt:Audience"];
-        var key = builder.Configuration["Jwt:Key"] ?? string.Empty;
-
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -50,7 +59,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = issuer,
             ValidAudience = audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+            IssuerSigningKey = signingKey,
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = ClaimTypes.Email,
+            ClockSkew = TimeSpan.FromMinutes(clockSkewMinutes)
         };
     });
 
@@ -61,6 +73,8 @@ builder.Services.AddAuthorization(options =>
         policy.RequireAuthenticatedUser();
         policy.RequireRole(AuthRoles.AdminMaster);
     });
+
+    options.FallbackPolicy = options.GetPolicy(AuthorizationPolicies.AdminMasterOnly);
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -117,7 +131,7 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", utcNow = DateTime.UtcNow }));
+app.MapGet("/health", () => Results.Ok(new { status = "healthy", utcNow = DateTime.UtcNow })).AllowAnonymous();
 app.MapControllers();
 
 app.Run();

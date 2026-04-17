@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.10-jwt-contract-and-api-smoke] - 2026-04-17
+
+### Added
+- Added explicit JWT settings model (`JwtSettings`) with configurable token lifetime and clock skew.
+- Added Playwright API smoke test suite for auth/token contract and policy enforcement:
+  - login JWT contract (claims, issuer/audience, TTL)
+  - protected endpoint access control (401 anonymous, success for admin_master)
+
+### Changed
+- Hardened JWT setup in API startup with minimum key-length validation (32+ chars).
+- Centralized token validation configuration (issuer/audience/signing key/clock skew/claim mapping).
+- Expanded login token claims to include `jti` and `nameidentifier`, while preserving role and tenant claims.
+- Applied fallback authorization policy (`AdminMasterOnly`) to API endpoints and explicitly allowed anonymous health endpoint.
+
 ## [0.1.9-auth-policy-hardening] - 2026-04-17
 
 ### Added

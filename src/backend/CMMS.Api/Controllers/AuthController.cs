@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CMMS.Api.Auth;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using CMMS.Domain.Auth;
@@ -41,9 +42,11 @@ public sealed class AuthController(IConfiguration configuration) : ControllerBas
             });
         }
 
-        var issuer = _configuration["Jwt:Issuer"] ?? "Devcraft.CMMS";
-        var audience = _configuration["Jwt:Audience"] ?? "Devcraft.CMMS.Web";
-        var key = _configuration["Jwt:Key"] ?? "change-this-key-in-real-environments-32-chars-min";
+        var settings = _configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+        var issuer = string.IsNullOrWhiteSpace(settings.Issuer) ? "Devcraft.CMMS" : settings.Issuer.Trim();
+        var audience = string.IsNullOrWhiteSpace(settings.Audience) ? "Devcraft.CMMS.Web" : settings.Audience.Trim();
+        var key = settings.Key;
+        var tokenLifetimeHours = Math.Max(1, settings.AccessTokenLifetimeHours);
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
         var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
         var tenantId = HttpContext.Items.TryGetValue("TenantId", out var tenantObj) && tenantObj is Guid tenant
@@ -51,11 +54,14 @@ public sealed class AuthController(IConfiguration configuration) : ControllerBas
             : Guid.Empty;
 
         var nowUtc = DateTime.UtcNow;
-        var expiresUtc = nowUtc.AddHours(8);
+        var expiresUtc = nowUtc.AddHours(tokenLifetimeHours);
+        var tokenId = Guid.NewGuid().ToString("N");
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, configuredEmail),
+            new(JwtRegisteredClaimNames.Jti, tokenId),
             new(JwtRegisteredClaimNames.Email, configuredEmail),
+            new(ClaimTypes.NameIdentifier, configuredEmail),
             new(ClaimTypes.Email, configuredEmail),
             new(ClaimTypes.Role, AuthRoles.AdminMaster),
             new("role", AuthRoles.AdminMaster),
