@@ -19,6 +19,7 @@
 | TASK-REQ-2026-04-17-09 | Corrigir fuso horario UTC no modal do Kanban (Created/Closed) | closed | high | Kanban API task: `49291097-2fa1-4c19-a176-6bf281362fb9`, start: `2026-04-17 12:07:18 -03:00`, end: `2026-04-17 12:07:20 -03:00`, spent final: `0.4h` |
 | TASK-REQ-2026-04-17-10 | Forcar lifecycle completo nas tasks de validacao Playwright | closed | high | Kanban API task: `72a76b1f-7f1f-4a8d-a80b-7ec96158497f`, start: `2026-04-17 12:12:34 -03:00`, end: `2026-04-17 12:13:14 -03:00`, spent final: `0.5h` |
 | TASK-REQ-2026-04-17-11 | Exibir horario local no Kanban para eliminar ambiguidade de fuso | closed | high | Kanban API task: `8ab2ce2e-e630-430b-a12e-26a708dcc5a2`, start: `2026-04-17 12:14:31 -03:00`, end: `2026-04-17 12:15:10 -03:00`, spent final: `0.4h` |
+| TASK-REQ-2026-04-17-12 | Modal Kanban: remover UTC e exibir apenas horarios locais | closed | high | Kanban API task: `28b73342-2d1d-4e88-8d4f-2b5b3b5c0907`, start: `2026-04-17 12:16:10 -03:00`, end: `2026-04-17 12:16:36 -03:00`, spent final: `0.3h` |
 
 ## Transition Log
 
@@ -48,6 +49,9 @@
 | TASK-REQ-2026-04-17-11 | new -> active | 2026-04-17 12:14:31 -03:00 (LOCAL) | Solicitacao recebida para remover percepcao de fuso +3 nos cards |
 | TASK-REQ-2026-04-17-11 | active -> resolved | 2026-04-17 12:15:10 -03:00 (LOCAL) | Modal ajustado para exibir Local (America/Sao_Paulo) e UTC |
 | TASK-REQ-2026-04-17-11 | resolved -> closed | 2026-04-17 12:15:10 -03:00 (LOCAL) | Task Kanban fechada com `spentHours` final `0.4h` |
+| TASK-REQ-2026-04-17-12 | new -> active | 2026-04-17 12:16:10 -03:00 (LOCAL) | Solicitacao recebida para manter somente horario local no modal |
+| TASK-REQ-2026-04-17-12 | active -> resolved | 2026-04-17 12:16:36 -03:00 (LOCAL) | Campos UTC removidos do modal e mantido parsing de horario local |
+| TASK-REQ-2026-04-17-12 | resolved -> closed | 2026-04-17 12:16:36 -03:00 (LOCAL) | Task Kanban fechada com `spentHours` final `0.3h` |
 
 ## Baseline Done
 

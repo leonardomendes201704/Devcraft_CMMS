@@ -384,15 +384,8 @@ export function KanbanPage() {
                 <span className="font-medium text-slate-700">Created (Local):</span> {formatLocalTimestamp(selectedTask.createdAtUtc)}
               </p>
               <p>
-                <span className="font-medium text-slate-700">Created (UTC):</span> {formatUtcTimestamp(selectedTask.createdAtUtc)}
-              </p>
-              <p>
                 <span className="font-medium text-slate-700">Closed (Local):</span>{' '}
                 {selectedTask.closedAtUtc ? formatLocalTimestamp(selectedTask.closedAtUtc) : '-'}
-              </p>
-              <p>
-                <span className="font-medium text-slate-700">Closed (UTC):</span>{' '}
-                {selectedTask.closedAtUtc ? formatUtcTimestamp(selectedTask.closedAtUtc) : '-'}
               </p>
               <p>
                 <span className="font-medium text-slate-700">Closed Spent:</span>{' '}
@@ -466,15 +459,6 @@ function ModalMetric({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
-}
-
-function formatUtcTimestamp(value: string): string {
-  const date = parseUtcTimestamp(value)
-  if (Number.isNaN(date.getTime())) {
-    return value
-  }
-
-  return date.toISOString()
 }
 
 function formatLocalTimestamp(value: string): string {
