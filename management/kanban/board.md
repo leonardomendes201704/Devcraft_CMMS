@@ -13,8 +13,8 @@
 | TASK-REQ-2026-04-17-03 | Validar entrega com backend+frontend rodando e evidencias Playwright | closed | high | Evidencias em `docs/test-evidence/2026-04-17-kanban-validation` |
 | TASK-REQ-2026-04-17-04 | Subir tudo para o repositorio GitHub `leonardomendes201704/Devcraft_CMMS` | closed | high | Commit `04acf43` e push em `main` |
 | TASK-REQ-2026-04-17-05 | Corrigir disciplina Task First e fluxo de estados no Kanban | closed | high | Fluxo de status validado com bloqueio de fechamento antecipado |
-| TASK-REQ-2026-04-17-06 | Configurar ambiente Docker com PostgreSQL e migrar dados do fallback | new | high | Kanban API task: `e7235369-c8e8-42e7-a5b6-85b765205b75` |
-| TASK-REQ-2026-04-17-07 | Hardening: exigir apontamento de esforco antes de fechar task | new | high | Kanban API task: `ccdc0477-4c33-49aa-b04a-ba4dcfefa6e9` |
+| TASK-REQ-2026-04-17-06 | Configurar ambiente Docker com PostgreSQL e migrar dados do fallback | active | high | Kanban API task: `e7235369-c8e8-42e7-a5b6-85b765205b75` |
+| TASK-REQ-2026-04-17-07 | Hardening: exigir apontamento de esforco antes de fechar task | closed | high | Kanban API task: `ccdc0477-4c33-49aa-b04a-ba4dcfefa6e9`, spent final: `1.2h` |
 
 ## Transition Log
 
@@ -28,6 +28,10 @@
 | TASK-REQ-2026-04-17-05 | resolved -> closed | 2026-04-17T14:51:00Z | Smoke test comprovou bloqueio de close precoce e fechamento correto |
 | TASK-REQ-2026-04-17-06 | new | 2026-04-17T14:50:00Z | Solicitacao recebida para dockerizar ambiente com PostgreSQL e migracao |
 | TASK-REQ-2026-04-17-07 | new | 2026-04-17T14:50:00Z | Gap identificado de governanca de effort antes de close |
+| TASK-REQ-2026-04-17-07 | new -> active | 2026-04-17T14:57:00Z | Implementacao da regra effort obrigatorio iniciada |
+| TASK-REQ-2026-04-17-07 | active -> resolved | 2026-04-17T15:00:00Z | Backend + frontend + CLI atualizados e validados |
+| TASK-REQ-2026-04-17-07 | resolved -> closed | 2026-04-17T15:02:00Z | Task API `ccdc...` fechada com spentHours=1.2 |
+| TASK-REQ-2026-04-17-06 | new -> active | 2026-04-17T15:03:00Z | Planejamento de docker/postgres mantido em andamento |
 
 ## Baseline Done
 

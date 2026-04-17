@@ -171,6 +171,11 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
             }
         }
 
+        if (task.SpentHours <= 0m)
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(task.SpentHours), "Task must have spentHours greater than 0 before close."));
+        }
+
         var previousStatus = task.Status;
         var closedAtUtc = DateTime.UtcNow;
         var leadTimeHours = Math.Round((decimal)(closedAtUtc - task.CreatedAtUtc).TotalHours, 2);

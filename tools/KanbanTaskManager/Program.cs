@@ -231,6 +231,12 @@ static async Task<int> CloseTaskAsync(DatabaseContext db, CliOptions options)
     var spent = optionalSpent.HasValue ? Math.Round(Math.Max(0m, optionalSpent.Value), 2) : task.SpentHours;
     var leadHours = Math.Round((decimal)(utcNow - task.CreatedAtUtc).TotalHours, 2);
 
+    if (spent <= 0m)
+    {
+        Console.Error.WriteLine("task must have spentHours greater than 0 before close");
+        return 4;
+    }
+
     await using var tx = await db.Connection.BeginTransactionAsync();
 
     if (task.SpentHours != spent)

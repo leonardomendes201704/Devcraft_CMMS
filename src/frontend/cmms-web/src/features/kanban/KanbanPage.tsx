@@ -20,6 +20,7 @@ export function KanbanPage() {
   const [newModule, setNewModule] = useState('General')
   const [newEstimate, setNewEstimate] = useState(2)
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   const refreshTasks = () => queryClient.invalidateQueries({ queryKey: ['kanban-tasks'] })
 
@@ -66,6 +67,14 @@ export function KanbanPage() {
       count: tasks.length,
     }
   }, [tasks])
+
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskId) {
+      return null
+    }
+
+    return tasks.find((task) => task.id === selectedTaskId) ?? null
+  }, [selectedTaskId, tasks])
 
   function updateTaskStatusById(taskId: string, status: TaskStatus) {
     const task = tasks.find((item) => item.id === taskId)
@@ -226,6 +235,7 @@ export function KanbanPage() {
                       className={`cursor-grab rounded-xl border p-3 text-slate-900 active:cursor-grabbing ${style.card}`}
                       draggable
                       onDragStart={() => setDraggingTaskId(task.id)}
+                      onClick={() => setSelectedTaskId(task.id)}
                     >
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <div>
@@ -333,6 +343,66 @@ export function KanbanPage() {
           </div>
         </div>
       ) : null}
+      {selectedTask ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-4"
+          onClick={() => setSelectedTaskId(null)}
+        >
+          <article
+            className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-2xl shadow-slate-400/40"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500">{selectedTask.id}</p>
+                <h2 className="text-xl font-semibold text-slate-900">{selectedTask.title}</h2>
+              </div>
+              <button
+                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-600 hover:bg-slate-100"
+                type="button"
+                onClick={() => setSelectedTaskId(null)}
+              >
+                Close
+              </button>
+            </header>
+
+            <div className="mb-4 grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
+              <ModalMetric label="Status" value={taskStatusLabel[selectedTask.status]} />
+              <ModalMetric label="Type" value={taskTypeLabel[selectedTask.type]} />
+              <ModalMetric label="Estimate" value={`${selectedTask.estimateHours}h`} />
+              <ModalMetric label="Spent" value={`${selectedTask.spentHours}h`} />
+            </div>
+
+            <div className="space-y-3 text-sm">
+              <p>
+                <span className="font-medium text-slate-700">Module:</span> {selectedTask.module}
+              </p>
+              <p>
+                <span className="font-medium text-slate-700">Assignee:</span> {selectedTask.assignee}
+              </p>
+              <p>
+                <span className="font-medium text-slate-700">Created (UTC):</span> {new Date(selectedTask.createdAtUtc).toISOString()}
+              </p>
+              <p>
+                <span className="font-medium text-slate-700">Closed (UTC):</span>{' '}
+                {selectedTask.closedAtUtc ? new Date(selectedTask.closedAtUtc).toISOString() : '-'}
+              </p>
+              <p>
+                <span className="font-medium text-slate-700">Closed Spent:</span>{' '}
+                {selectedTask.totalSpentHoursOnClose !== null ? `${selectedTask.totalSpentHoursOnClose}h` : '-'}
+              </p>
+              <p>
+                <span className="font-medium text-slate-700">Lead Time On Close:</span>{' '}
+                {selectedTask.totalLeadTimeHoursOnClose !== null ? `${selectedTask.totalLeadTimeHoursOnClose}h` : '-'}
+              </p>
+            </div>
+
+            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800">
+              {selectedTask.description}
+            </div>
+          </article>
+        </div>
+      ) : null}
     </main>
   )
 }
@@ -347,7 +417,7 @@ function getSelectableStatuses(task: KanbanTask): TaskStatus[] {
   }
 
   if (task.status === 'resolved') {
-    return ['resolved', 'active', 'closed']
+    return task.spentHours > 0 ? ['resolved', 'active', 'closed'] : ['resolved', 'active']
   }
 
   return ['closed']
@@ -378,6 +448,15 @@ function MetricCard({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right">
       <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
       <p className="text-lg font-semibold text-slate-900">{value}</p>
+    </div>
+  )
+}
+
+function ModalMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+      <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="text-sm font-semibold text-slate-900">{value}</p>
     </div>
   )
 }

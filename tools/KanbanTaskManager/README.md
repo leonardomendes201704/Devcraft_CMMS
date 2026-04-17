@@ -22,4 +22,4 @@ dotnet run --project tools/KanbanTaskManager -- close --tenant <guid> --task <ta
 
 - Mantem trilha de auditoria (`kanban_task_audit_logs`) para mudanca de status/esforco/fechamento.
 - Aplica regra de fluxo para status (`new -> active -> resolved`, `resolved -> active`).
-- Fechamento exige status `resolved`.
+- Fechamento exige status `resolved` e `spentHours > 0`.
