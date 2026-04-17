@@ -3,6 +3,7 @@ using CMMS.Application;
 using CMMS.Infrastructure;
 using CMMS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
@@ -88,6 +89,7 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.EnsureCreatedAsync();
+    await EnsureKanbanEvidenceSchemaAsync(dbContext);
 }
 
 if (app.Environment.IsDevelopment())
@@ -106,3 +108,29 @@ app.MapGet("/health", () => Results.Ok(new { status = "healthy", utcNow = DateTi
 app.MapControllers();
 
 app.Run();
+
+static async Task EnsureKanbanEvidenceSchemaAsync(AppDbContext dbContext)
+{
+    var providerName = dbContext.Database.ProviderName ?? string.Empty;
+
+    if (providerName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    {
+        try
+        {
+            await dbContext.Database.ExecuteSqlRawAsync(
+                "ALTER TABLE kanban_tasks ADD COLUMN EvidenceJson TEXT NOT NULL DEFAULT '[]';");
+        }
+        catch
+        {
+            // Column may already exist on dev databases.
+        }
+
+        return;
+    }
+
+    if (providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
+    {
+        await dbContext.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS \"EvidenceJson\" text NOT NULL DEFAULT '[]';");
+    }
+}

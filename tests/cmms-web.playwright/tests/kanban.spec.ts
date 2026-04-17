@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises'
+import path from 'node:path'
 import { expect, test } from '@playwright/test'
 
 test('kanban renders and creates task', async ({ page, request }, testInfo) => {
@@ -26,7 +28,8 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   await expect(page.getByRole('heading', { name: taskTitle })).toBeVisible()
   await expect(tasksMetricValue).not.toHaveText(beforeText)
 
-  await page.screenshot({ path: testInfo.outputPath('kanban-after-create.png'), fullPage: true })
+  const screenshotPath = testInfo.outputPath('kanban-after-create.png')
+  await page.screenshot({ path: screenshotPath, fullPage: true })
 
   const afterText = await tasksMetricValue.innerText()
   const after = Number.parseInt(afterText, 10)
@@ -44,10 +47,29 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   expect(createdTask).toBeDefined()
 
   const taskId = createdTask!.id
+  const evidenceFileName = `task-${taskId}-playwright-${Date.now()}.png`
+  const evidenceDirectory = path.resolve(testInfo.config.rootDir, '../../../src/frontend/cmms-web/public/evidences')
+  const evidenceAbsolutePath = path.join(evidenceDirectory, evidenceFileName)
+  const evidencePublicUrl = `/evidences/${evidenceFileName}`
+
+  await fs.mkdir(evidenceDirectory, { recursive: true })
+  await fs.copyFile(screenshotPath, evidenceAbsolutePath)
+
   const mutationHeaders = {
     'Content-Type': 'application/json',
     'X-Tenant-Id': tenantId,
   }
+
+  const addEvidence = await request.post(`http://localhost:5270/api/tasks/${taskId}/evidences`, {
+    headers: mutationHeaders,
+    data: {
+      title: 'Playwright - Kanban after create',
+      imageUrl: evidencePublicUrl,
+      source: 'playwright',
+      capturedAtUtc: new Date().toISOString(),
+    },
+  })
+  expect(addEvidence.ok()).toBeTruthy()
 
   const toActive = await request.patch(`http://localhost:5270/api/tasks/${taskId}/status`, {
     headers: mutationHeaders,
@@ -72,4 +94,7 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
     data: { spentHours: 0.5 },
   })
   expect(closeTask.ok()).toBeTruthy()
+
+  const closedTask = (await closeTask.json()) as { evidences?: Array<{ imageUrl: string }> }
+  expect(closedTask.evidences?.some((evidence) => evidence.imageUrl === evidencePublicUrl)).toBeTruthy()
 })

@@ -15,6 +15,7 @@ public sealed class KanbanTask : AuditableTenantEntity
     public DateTime? ClosedAtUtc { get; set; }
     public decimal? TotalSpentHoursOnClose { get; set; }
     public decimal? TotalLeadTimeHoursOnClose { get; set; }
+    public string EvidenceJson { get; set; } = "[]";
 
     public ICollection<KanbanTaskAuditLog> AuditLogs { get; set; } = new List<KanbanTaskAuditLog>();
 }

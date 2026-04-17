@@ -1,5 +1,13 @@
-import type { KanbanTask, TaskStatus, TaskType } from '../../features/kanban/types'
+import type { KanbanTask, TaskEvidence, TaskStatus, TaskType } from '../../features/kanban/types'
 import { apiFetch } from './http'
+
+type ApiTaskEvidence = {
+  id: string
+  title: string
+  imageUrl: string
+  source: string
+  capturedAtUtc: string
+}
 
 type ApiKanbanTask = {
   id: string
@@ -15,6 +23,7 @@ type ApiKanbanTask = {
   closedAtUtc: string | null
   totalSpentHoursOnClose: number | null
   totalLeadTimeHoursOnClose: number | null
+  evidences: ApiTaskEvidence[]
 }
 
 type CreateTaskPayload = {
@@ -24,6 +33,13 @@ type CreateTaskPayload = {
   module: string
   assignee?: string
   estimateHours: number
+}
+
+type AddTaskEvidencePayload = {
+  title: string
+  imageUrl: string
+  source?: string
+  capturedAtUtc?: string
 }
 
 export async function listTasks() {
@@ -67,6 +83,15 @@ export async function completeTask(taskId: string) {
   return toKanbanTask(task)
 }
 
+export async function addTaskEvidence(taskId: string, payload: AddTaskEvidencePayload) {
+  const task = await apiFetch<ApiKanbanTask>(`/api/tasks/${taskId}/evidences`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
+  return toKanbanTask(task)
+}
+
 function toKanbanTask(task: ApiKanbanTask): KanbanTask {
   return {
     ...task,
@@ -75,5 +100,16 @@ function toKanbanTask(task: ApiKanbanTask): KanbanTask {
     closedAtUtc: task.closedAtUtc ?? null,
     totalSpentHoursOnClose: task.totalSpentHoursOnClose ?? null,
     totalLeadTimeHoursOnClose: task.totalLeadTimeHoursOnClose ?? null,
+    evidences: (task.evidences ?? []).map(toTaskEvidence),
+  }
+}
+
+function toTaskEvidence(evidence: ApiTaskEvidence): TaskEvidence {
+  return {
+    id: evidence.id,
+    title: evidence.title ?? 'Evidence',
+    imageUrl: evidence.imageUrl ?? '',
+    source: evidence.source ?? 'manual',
+    capturedAtUtc: evidence.capturedAtUtc,
   }
 }

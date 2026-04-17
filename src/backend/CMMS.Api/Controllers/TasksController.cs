@@ -3,6 +3,7 @@ using CMMS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace CMMS.Api.Controllers;
 
@@ -207,6 +208,52 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
         return Ok(task.ToResponse());
     }
 
+    [HttpPost("{id:guid}/evidences")]
+    public async Task<ActionResult<KanbanTaskResponse>> AddEvidenceAsync(
+        Guid id,
+        [FromBody] AddTaskEvidenceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var task = await _dbContext.KanbanTasks.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (task is null)
+        {
+            return NotFound();
+        }
+
+        var title = request.Title?.Trim() ?? string.Empty;
+        if (title.Length == 0)
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(request.Title), "Title is required."));
+        }
+
+        var imageUrl = request.ImageUrl?.Trim() ?? string.Empty;
+        if (imageUrl.Length == 0)
+        {
+            return BadRequest(CreateValidationProblemDetails(nameof(request.ImageUrl), "ImageUrl is required."));
+        }
+
+        var evidences = DeserializeEvidencesJson(task.EvidenceJson);
+        evidences.Add(new KanbanTaskEvidence
+        {
+            Id = Guid.NewGuid(),
+            Title = title,
+            ImageUrl = imageUrl,
+            CapturedAtUtc = request.CapturedAtUtc ?? DateTime.UtcNow,
+            Source = string.IsNullOrWhiteSpace(request.Source) ? "manual" : request.Source.Trim()
+        });
+
+        task.EvidenceJson = JsonSerializer.Serialize(evidences);
+
+        _dbContext.KanbanTaskAuditLogs.Add(new KanbanTaskAuditLog
+        {
+            KanbanTaskId = task.Id,
+            EventType = "evidence_added"
+        });
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(task.ToResponse());
+    }
+
     private static decimal NormalizeHours(decimal value, decimal minimum)
     {
         if (value < minimum)
@@ -234,6 +281,23 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
             (KanbanTaskStatus.Resolved, KanbanTaskStatus.Active) => true,
             _ => false
         };
+    }
+
+    private static List<KanbanTaskEvidence> DeserializeEvidencesJson(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<KanbanTaskEvidence>>(evidenceJson) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 }
 
@@ -273,6 +337,27 @@ public sealed class CompleteTaskRequest
     public decimal? SpentHours { get; init; }
 }
 
+public sealed class AddTaskEvidenceRequest
+{
+    [Required, MaxLength(256)]
+    public string Title { get; init; } = string.Empty;
+
+    [Required, MaxLength(2048)]
+    public string ImageUrl { get; init; } = string.Empty;
+
+    [MaxLength(64)]
+    public string? Source { get; init; }
+
+    public DateTime? CapturedAtUtc { get; init; }
+}
+
+public sealed record KanbanTaskEvidenceResponse(
+    Guid Id,
+    string Title,
+    string ImageUrl,
+    string Source,
+    DateTime CapturedAtUtc);
+
 public sealed record KanbanTaskResponse(
     Guid Id,
     string Title,
@@ -286,7 +371,8 @@ public sealed record KanbanTaskResponse(
     DateTime CreatedAtUtc,
     DateTime? ClosedAtUtc,
     decimal? TotalSpentHoursOnClose,
-    decimal? TotalLeadTimeHoursOnClose);
+    decimal? TotalLeadTimeHoursOnClose,
+    IReadOnlyList<KanbanTaskEvidenceResponse> Evidences);
 
 public static class KanbanTaskMappings
 {
@@ -296,6 +382,15 @@ public static class KanbanTaskMappings
         var closedAtUtc = task.ClosedAtUtc.HasValue
             ? DateTime.SpecifyKind(task.ClosedAtUtc.Value, DateTimeKind.Utc)
             : (DateTime?)null;
+        var evidences = DeserializeEvidences(task.EvidenceJson)
+            .OrderByDescending(x => x.CapturedAtUtc)
+            .Select(x => new KanbanTaskEvidenceResponse(
+                x.Id,
+                x.Title,
+                x.ImageUrl,
+                x.Source,
+                DateTime.SpecifyKind(x.CapturedAtUtc, DateTimeKind.Utc)))
+            .ToList();
 
         return new KanbanTaskResponse(
             task.Id,
@@ -310,6 +405,24 @@ public static class KanbanTaskMappings
             createdAtUtc,
             closedAtUtc,
             task.TotalSpentHoursOnClose,
-            task.TotalLeadTimeHoursOnClose);
+            task.TotalLeadTimeHoursOnClose,
+            evidences);
+    }
+
+    private static List<KanbanTaskEvidence> DeserializeEvidences(string? evidenceJson)
+    {
+        if (string.IsNullOrWhiteSpace(evidenceJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<KanbanTaskEvidence>>(evidenceJson) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 }

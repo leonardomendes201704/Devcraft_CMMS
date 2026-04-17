@@ -16,6 +16,15 @@ export interface KanbanTask {
   closedAtUtc: string | null
   totalSpentHoursOnClose: number | null
   totalLeadTimeHoursOnClose: number | null
+  evidences: TaskEvidence[]
+}
+
+export interface TaskEvidence {
+  id: string
+  title: string
+  imageUrl: string
+  source: string
+  capturedAtUtc: string
 }
 
 export const taskStatusOrder: TaskStatus[] = ['new', 'active', 'resolved', 'closed']

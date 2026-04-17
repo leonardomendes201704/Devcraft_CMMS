@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
-import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskStatus, type TaskType } from './types'
+import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskEvidence, type TaskStatus, type TaskType } from './types'
 
 export function KanbanPage() {
   const queryClient = useQueryClient()
@@ -21,6 +21,7 @@ export function KanbanPage() {
   const [newEstimate, setNewEstimate] = useState(2)
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [lightboxEvidence, setLightboxEvidence] = useState<TaskEvidence | null>(null)
 
   const refreshTasks = () => queryClient.invalidateQueries({ queryKey: ['kanban-tasks'] })
 
@@ -400,7 +401,54 @@ export function KanbanPage() {
             <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800">
               {selectedTask.description}
             </div>
+
+            <section className="mt-4">
+              <h3 className="mb-2 text-sm font-semibold text-slate-900">Evidence</h3>
+              {selectedTask.evidences.length === 0 ? (
+                <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">No evidence attached.</p>
+              ) : (
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+                  {selectedTask.evidences.map((evidence) => (
+                    <button
+                      key={evidence.id}
+                      className="group overflow-hidden rounded-lg border border-slate-200 bg-white text-left shadow-sm"
+                      type="button"
+                      onClick={() => setLightboxEvidence(evidence)}
+                    >
+                      <img
+                        alt={evidence.title}
+                        className="h-28 w-full object-cover transition duration-200 group-hover:scale-[1.03]"
+                        src={resolveEvidenceUrl(evidence.imageUrl)}
+                      />
+                      <div className="space-y-1 p-2">
+                        <p className="line-clamp-1 text-xs font-medium text-slate-900">{evidence.title}</p>
+                        <p className="text-[11px] text-slate-500">
+                          {formatLocalTimestamp(evidence.capturedAtUtc)} - {evidence.source}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
           </article>
+        </div>
+      ) : null}
+      {lightboxEvidence ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/85 p-4"
+          onClick={() => setLightboxEvidence(null)}
+        >
+          <figure className="max-h-[90vh] max-w-5xl" onClick={(event) => event.stopPropagation()}>
+            <img
+              alt={lightboxEvidence.title}
+              className="max-h-[82vh] w-auto max-w-full rounded-lg object-contain shadow-2xl"
+              src={resolveEvidenceUrl(lightboxEvidence.imageUrl)}
+            />
+            <figcaption className="mt-2 text-center text-sm text-slate-100">
+              {lightboxEvidence.title} - {formatLocalTimestamp(lightboxEvidence.capturedAtUtc)}
+            </figcaption>
+          </figure>
         </div>
       ) : null}
     </main>
@@ -484,4 +532,16 @@ function parseUtcTimestamp(value: string): Date {
   // Legacy SQLite rows may not include timezone suffix. Treat them as UTC.
   const normalized = /([zZ]|[+-]\d{2}:\d{2})$/.test(value) ? value : `${value}Z`
   return new Date(normalized)
+}
+
+function resolveEvidenceUrl(imageUrl: string): string {
+  if (/^https?:\/\//i.test(imageUrl)) {
+    return imageUrl
+  }
+
+  if (imageUrl.startsWith('/')) {
+    return imageUrl
+  }
+
+  return `/${imageUrl}`
 }

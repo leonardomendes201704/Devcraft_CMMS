@@ -43,6 +43,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             entity.Property(x => x.SpentHours).HasPrecision(10, 2);
             entity.Property(x => x.TotalSpentHoursOnClose).HasPrecision(10, 2);
             entity.Property(x => x.TotalLeadTimeHoursOnClose).HasPrecision(10, 2);
+            entity.Property(x => x.EvidenceJson).HasColumnType("TEXT").HasDefaultValue("[]");
             entity.HasIndex(x => new { x.TenantId, x.Status, x.CreatedAtUtc });
             entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
         });
