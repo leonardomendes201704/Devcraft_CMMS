@@ -3,7 +3,10 @@ import { AppShell } from '../layout/AppShell'
 import { LoginPage } from '../../features/auth/LoginPage'
 import { HomePage } from '../../features/home/HomePage'
 import { KanbanPage } from '../../features/kanban/KanbanPage'
-import { UsersAdminPage } from '../../features/users/UsersAdminPage'
+import { UsersCreatePage } from '../../features/users/UsersCreatePage'
+import { UsersEditPage } from '../../features/users/UsersEditPage'
+import { UsersListPage } from '../../features/users/UsersListPage'
+import { UsersViewPage } from '../../features/users/UsersViewPage'
 import { AccessDeniedPage } from '../../features/system/AccessDeniedPage'
 import { getSessionUser, isAuthenticated } from '../../shared/auth/session'
 
@@ -57,7 +60,19 @@ const router = createBrowserRouter([
             children: [
               {
                 path: 'admin/users',
-                element: <UsersAdminPage />,
+                element: <UsersListPage />,
+              },
+              {
+                path: 'admin/users/create',
+                element: <UsersCreatePage />,
+              },
+              {
+                path: 'admin/users/:userId',
+                element: <UsersViewPage />,
+              },
+              {
+                path: 'admin/users/:userId/edit',
+                element: <UsersEditPage />,
               },
             ],
           },

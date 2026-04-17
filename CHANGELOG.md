@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.14-users-crud-split-routes] - 2026-04-17
+
+### Added
+- Added dedicated User Administration routes/pages:
+  - `/app/admin/users` (List)
+  - `/app/admin/users/create` (Create)
+  - `/app/admin/users/:userId` (View)
+  - `/app/admin/users/:userId/edit` (Edit)
+- Added reusable users UI components:
+  - `UsersPageHeader`
+  - `UserForm`
+  - `UserSummaryCard`
+- Added backend endpoint `GET /api/auth/users/{id}` to support dedicated View/Edit screens.
+
+### Changed
+- Replaced previous inline all-in-one users screen with route-based CRUD flow.
+- Updated frontend users API client with `getAuthUserById`.
+- Updated Playwright user-admin E2E to validate split-screen flow with 8 evidence steps.
+
 ## [0.1.13-app-shell-foundation] - 2026-04-17
 
 ### Added

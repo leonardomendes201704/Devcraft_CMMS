@@ -31,6 +31,10 @@ export async function listAuthUsers() {
   return apiFetch<AuthUser[]>('/api/auth/users')
 }
 
+export async function getAuthUserById(userId: string) {
+  return apiFetch<AuthUser>(`/api/auth/users/${userId}`)
+}
+
 export async function createAuthUser(payload: CreateAuthUserPayload) {
   return apiFetch<AuthUser>('/api/auth/users', {
     method: 'POST',

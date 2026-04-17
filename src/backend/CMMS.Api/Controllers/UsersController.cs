@@ -26,6 +26,21 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
         return Ok(users.Select(ToResponse).ToList());
     }
 
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<AuthUserResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var user = await _dbContext.AuthUsers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(ToResponse(user));
+    }
+
     [HttpPost]
     public async Task<ActionResult<AuthUserResponse>> CreateAsync([FromBody] CreateAuthUserRequest request, CancellationToken cancellationToken)
     {
