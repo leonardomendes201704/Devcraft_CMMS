@@ -9,9 +9,24 @@ description: Automates the mandatory Devcraft CMMS Kanban task lifecycle (new ->
 
 Apply this skill at the **start** of any work request in the `Devcraft_CMMS` repo and follow it to the end. It is mandatory per `guidelines/workflows/task-lifecycle-directive.md`. Even trivial changes (typos, i18n, small refactors) need a task.
 
-Trigger phrases (non-exhaustive): "preciso que você", "altere", "crie", "corrija", "ajuste", "implemente", "regulariza", "retroativo", "adicione", "remova", any instruction that results in a commit.
+Trigger phrases (non-exhaustive): "preciso que voce", "altere", "crie", "corrija", "ajuste", "implemente", "regulariza", "retroativo", "adicione", "remova", any instruction that results in a commit.
 
 If you are just answering a question / reading code, do NOT create a task.
+
+## Language policy (MANDATORY - PT-BR)
+
+Todo conteudo de task gravado no backend DEVE estar em **Portugues do Brasil**: `title`, `description`, `module`, titulos de evidences, linhas em `management/kanban/board.md` e bullets em `CHANGELOG.md` relacionados a task. Essa regra vem de `guidelines/workflows/task-lifecycle-directive.md` (secao "Language Policy").
+
+Exemplos bons (PT-BR):
+- `[TASK] Esconder id do card no Kanban e abrir modal apenas com duplo clique`
+- `[BUG] Modal do Kanban abrindo ao clicar no dropdown de status`
+- `[CHG] Atualizar tradicoes PT-BR para shell de navegacao`
+
+Exemplos ruins (evitar - ingles):
+- `[TASK] Hide task id on Kanban card and open modal on double click`
+- `[BUG] Kanban modal opens when clicking status dropdown`
+
+Termos tecnicos sem traducao natural (endpoint, pipeline, lint, JWT, Playwright, dropdown, handler, hook) permanecem no original. Nomes de arquivos, rotas, classes, variaveis, e todo e qualquer identificador de codigo NAO sao traduzidos.
 
 ## Quick workflow
 

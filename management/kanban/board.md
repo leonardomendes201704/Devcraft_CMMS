@@ -26,6 +26,7 @@
 | TASK-REQ-2026-04-17-16 | Sincronizar changelog historico e ordenar visualizacao recente->antigo | closed | high | Kanban API task: `2fcbc292-5f0e-45db-812c-55b9401b400e`, start: `2026-04-17 12:47:08 -03:00`, end: `2026-04-17 12:49:05 -03:00`, spent final: `0.9h` |
 | TASK-REQ-2026-04-17-17 | Encurtar labels do menu e titulos de paginas (remover prefixo "Administracao de") | closed | medium | Kanban API task: `0a6124e6-2353-46a9-99b4-1cc3f1a47c2f`, start: `2026-04-17 20:00:21 -03:00`, end: `2026-04-17 20:00:38 -03:00`, spent final: `0.3h`, evidencias Playwright (3 steps) + regression spec `shell-menu-labels.spec.ts` |
 | TASK-REQ-2026-04-17-18 | Criar skill `.cursor/skills/devcraft-task-lifecycle/` para automatizar ciclo de tasks (login/new/start/resolve/close/evidence/show) e corrigir imagens de evidencia nao visiveis no modal | closed | high | Kanban API task: `fee041b7-5ad0-43e9-982a-722cfd5aeb06`, start: `2026-04-17 20:10:55 -03:00`, end: `2026-04-17 20:12:46 -03:00`, spent final: `1.4h`, evidencias: 1 image (modal "Image unavailable" antes do fix) + 1 api (POST /api/tasks response). Workaround Vite public-dir documentado em LL-009. |
+| TASK-REQ-2026-04-17-19 | Adotar idioma PT-BR como padrao obrigatorio para tasks Kanban (title/description/module/snippets) | closed | medium | Kanban API task: `beb42807-1b3b-4f89-ada0-64a1e57f8053`, start: `2026-04-17 20:18:10 -03:00`, end: (a preencher no close), diretrizes atualizadas em `task-lifecycle-directive.md`, `SKILL.md` e `guidelines/README.md` |
 
 ## Transition Log
 
@@ -76,6 +77,9 @@
 | TASK-REQ-2026-04-17-18 | new -> active | 2026-04-17 20:10:55 -03:00 (LOCAL) | Solicitacao do usuario para criar skill de gerenciamento de tasks e corrigir "Image unavailable" em evidencias novas |
 | TASK-REQ-2026-04-17-18 | active -> resolved | 2026-04-17 20:12:19 -03:00 (LOCAL) | Skill `.cursor/skills/devcraft-task-lifecycle/` criada (SKILL.md + reference.md + scripts/task.ps1) e validada com ciclo completo; workaround Vite public-dir automatizado no `close` |
 | TASK-REQ-2026-04-17-18 | resolved -> closed | 2026-04-17 20:12:46 -03:00 (LOCAL) | Kanban task closed com `spentHours=1.4`, evidencias (1 image + 1 api) servidas corretamente apos auto-restart do web container; LL-009 e LL-010 registrados |
+| TASK-REQ-2026-04-17-19 | new -> active | 2026-04-17 20:18:10 -03:00 (LOCAL) | Solicitacao do usuario para tornar PT-BR obrigatorio em toda task registrada |
+| TASK-REQ-2026-04-17-19 | active -> resolved | 2026-04-17 20:19:00 -03:00 (LOCAL) | Diretrizes atualizadas (task-lifecycle-directive.md + SKILL.md + guidelines/README.md) com Language Policy |
+| TASK-REQ-2026-04-17-19 | resolved -> closed | 2026-04-17 20:19:00 -03:00 (LOCAL) | Kanban task fechada com `spentHours=0.5` |
 
 ## Baseline Done
 

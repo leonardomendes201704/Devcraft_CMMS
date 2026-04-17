@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.21-language-policy-pt-br] - 2026-04-17
+
+### Added
+- Adicionada secao "Language Policy" em `guidelines/workflows/task-lifecycle-directive.md` tornando PT-BR obrigatorio para titulo, descricao, modulo e evidencias de toda task Kanban, assim como para as linhas correspondentes em `management/kanban/board.md` e bullets em `CHANGELOG.md`. Identificadores de codigo e termos tecnicos sem traducao natural permanecem em ingles.
+- Adicionada secao "Language policy" em `.cursor/skills/devcraft-task-lifecycle/SKILL.md` com exemplos bons/ruins para reforcar PT-BR em toda invocacao da skill.
+- Adicionada secao "Language Policy" em `guidelines/README.md` unificando a regra para guidelines, tasks, comentarios e commits.
+
+Kanban task: `beb42807-1b3b-4f89-ada0-64a1e57f8053` (`[TASK] Adotar idioma PT-BR como padrao obrigatorio para tasks`).
+
 ## [0.1.20-task-lifecycle-skill] - 2026-04-17
 
 ### Added

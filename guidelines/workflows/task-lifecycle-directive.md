@@ -4,6 +4,19 @@
 
 Padronizar a execucao de tasks para evitar entregas sem rastreabilidade de tempo/status e garantir validacao com aplicacao rodando.
 
+## Language Policy (Mandatory)
+
+Toda task registrada no Kanban (titulo, descricao, modulo, snippets de changelog e board) DEVE ser escrita em **Portugues do Brasil (PT-BR)**, sempre. Isso vale para:
+
+- `POST /api/tasks` (campos `title`, `description`, `module`).
+- Linhas em `management/kanban/board.md` (Task Register, Transition Log).
+- Entradas em `CHANGELOG.md` que referenciam a task.
+- Evidencias (`title` dos evidences aceita "Passo 01 - ...", "Etapa 02 - ...", etc.).
+
+Termos tecnicos que nao tem traducao natural (ex.: "endpoint", "pipeline", "lint", "JWT", "Playwright") permanecem no original. Nomes de arquivos, rotas, classes, variaveis e identificadores de codigo NAO sao traduzidos.
+
+Prefixos permitidos no titulo: `[TASK]`, `[BUG]`, `[TC]`, `[CHG]`, `[FEAT]`, `[US]`, `[EPIC]`.
+
 ## Mandatory Flow (Local Machine Time)
 
 1. Antes de iniciar qualquer implementacao, criar task no Kanban.
