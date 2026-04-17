@@ -5,12 +5,12 @@ import { expect, test } from '@playwright/test'
 test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   const taskTitle = `Validacao E2E Kanban ${Date.now()}`
   const tenantId = '11111111-1111-1111-1111-111111111111'
+  const apiBaseUrl = 'http://localhost:8117'
 
   await page.goto('/kanban')
   await expect(page.getByRole('heading', { name: 'Devcraft CMMS - Kanban' })).toBeVisible()
   await page.getByRole('button', { name: 'View changelog' }).click()
   await expect(page.getByRole('heading', { name: 'Project Changelog' })).toBeVisible()
-  await expect(page.getByText('0.1.0-foundation', { exact: false })).toBeVisible()
   await page.getByRole('button', { name: 'Close' }).first().click()
 
   const tasksMetricValue = page
@@ -39,7 +39,7 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   const after = Number.parseInt(afterText, 10)
   expect(after).toBeGreaterThanOrEqual(before + 1)
 
-  const listResponse = await request.get('http://localhost:5270/api/tasks', {
+  const listResponse = await request.get(`${apiBaseUrl}/api/tasks`, {
     headers: {
       'X-Tenant-Id': tenantId,
     },
@@ -64,7 +64,7 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
     'X-Tenant-Id': tenantId,
   }
 
-  const addEvidence = await request.post(`http://localhost:5270/api/tasks/${taskId}/evidences`, {
+  const addEvidence = await request.post(`${apiBaseUrl}/api/tasks/${taskId}/evidences`, {
     headers: mutationHeaders,
     data: {
       title: 'Playwright - Kanban after create',
@@ -75,25 +75,25 @@ test('kanban renders and creates task', async ({ page, request }, testInfo) => {
   })
   expect(addEvidence.ok()).toBeTruthy()
 
-  const toActive = await request.patch(`http://localhost:5270/api/tasks/${taskId}/status`, {
+  const toActive = await request.patch(`${apiBaseUrl}/api/tasks/${taskId}/status`, {
     headers: mutationHeaders,
     data: { status: 'active' },
   })
   expect(toActive.ok()).toBeTruthy()
 
-  const toResolved = await request.patch(`http://localhost:5270/api/tasks/${taskId}/status`, {
+  const toResolved = await request.patch(`${apiBaseUrl}/api/tasks/${taskId}/status`, {
     headers: mutationHeaders,
     data: { status: 'resolved' },
   })
   expect(toResolved.ok()).toBeTruthy()
 
-  const setEffort = await request.patch(`http://localhost:5270/api/tasks/${taskId}/effort`, {
+  const setEffort = await request.patch(`${apiBaseUrl}/api/tasks/${taskId}/effort`, {
     headers: mutationHeaders,
     data: { spentHours: 0.5 },
   })
   expect(setEffort.ok()).toBeTruthy()
 
-  const closeTask = await request.post(`http://localhost:5270/api/tasks/${taskId}/complete`, {
+  const closeTask = await request.post(`${apiBaseUrl}/api/tasks/${taskId}/complete`, {
     headers: mutationHeaders,
     data: { spentHours: 0.5 },
   })

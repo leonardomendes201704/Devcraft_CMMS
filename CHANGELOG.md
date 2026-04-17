@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3-docker-ports] - 2026-04-17
+
+### Changed
+- Reconfigured Docker and local development ports to non-default values to avoid conflicts with other running applications.
+- API host port changed to `8117` and web port changed to `5487` in local and production compose files.
+- Frontend Vite defaults and Playwright runtime configuration now target the new API/Web ports.
+- Updated docs and API HTTP sample to reflect the new port map.
+
 ## [0.1.2-sync] - 2026-04-17
 
 ### Changed

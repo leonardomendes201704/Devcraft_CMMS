@@ -45,9 +45,9 @@ npm run dev
 ```
 
 4. Open:
-- API Swagger: `http://localhost:8080/swagger`
-- API Health: `http://localhost:8080/health`
-- Web: `http://localhost:5173`
+- API Swagger: `http://localhost:8117/swagger`
+- API Health: `http://localhost:8117/health`
+- Web: `http://localhost:5487`
 
 ## Tenant Header
 

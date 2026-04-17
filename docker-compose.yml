@@ -29,17 +29,19 @@
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=devcraft_cmms;Username=devcraft;Password=devcraft
     ports:
-      - "8080:8080"
+      - "8117:8080"
 
   web:
     image: node:24-alpine
     container_name: devcraft_cmms_web
     working_dir: /app
-    command: sh -c "npm ci && npm run dev -- --host"
+    environment:
+      VITE_API_TARGET: http://api:8080
+    command: sh -c "npm install && npm run dev -- --host --port 5487"
     volumes:
       - ./src/frontend/cmms-web:/app
     ports:
-      - "5173:5173"
+      - "5487:5487"
     depends_on:
       - api
 
