@@ -54,7 +54,7 @@ test('user admin screen creates and updates user', async ({ page, request }, tes
   await expect(page).toHaveURL(/\/app\/admin\/users\/.+\/edit$/)
   await page.getByLabel('User role').selectOption('technician')
   await page.getByRole('button', { name: 'Save changes' }).click()
-  await expect(page.getByText('Role: Technician')).toBeVisible()
+  await expect(page.getByLabel('User role')).toHaveValue('technician')
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 7, 'user role updated on edit page')
 
   await page.getByLabel('Reset password').fill('QaFlowPassw0rd!2')

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.15-users-list-search-filter-pagination] - 2026-04-17
+
+### Added
+- Added contextual search in users list (`email` and `id`).
+- Added list filters for role and active status.
+- Added client-side pagination controls with page size selector and previous/next navigation.
+
+### Changed
+- Updated users Playwright assertion to validate role persistence in edit form after removing inline summary block.
+
 ## [0.1.14-users-crud-split-routes] - 2026-04-17
 
 ### Added
