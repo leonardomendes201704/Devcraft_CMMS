@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.28-auth-api-baseline] - 2026-04-17
+
+### Added
+- `tests/cmms-web.playwright/tests/auth-api.spec.ts`: cenarios negativos de login — senha incorreta para master, email inexistente, e `POST /api/auth/login` sem `X-Tenant-Id` (middleware `tenant_resolution_failed`).
+
+Kanban task: `4bad7f7f-73af-4771-9aaf-55109d8f3388` (`[TASK] Auth baseline tests and validation checks`), start: `2026-04-17 21:25:02 -03:00`, end: `2026-04-17 21:25:23 -03:00`, spent final: `0.5h`, evidencia api (resumo spec + 6 testes passando).
+
 ## [0.1.27-playwright-orphan-tasks-batch] - 2026-04-18
 
 ### Added

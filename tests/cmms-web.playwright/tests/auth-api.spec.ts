@@ -45,6 +45,56 @@ test('login returns bearer token with expected JWT contract', async ({ request }
   expect(ttlHours).toBeLessThanOrEqual(8.1)
 })
 
+test('login rejects wrong password for existing master user', async ({ request }) => {
+  const loginResponse = await request.post(`${apiBaseUrl}/api/auth/login`, {
+    headers: {
+      'X-Tenant-Id': tenantId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      email: 'admin@cmms.local',
+      password: 'DefinitelyNotTheMasterPassword!',
+    },
+  })
+
+  expect(loginResponse.status()).toBe(401)
+  const body = (await loginResponse.json()) as { error?: string }
+  expect(body.error).toBe('invalid_credentials')
+})
+
+test('login rejects unknown email', async ({ request }) => {
+  const loginResponse = await request.post(`${apiBaseUrl}/api/auth/login`, {
+    headers: {
+      'X-Tenant-Id': tenantId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      email: `ghost.${Date.now()}@cmms.local`,
+      password: 'Naotemsenha0(',
+    },
+  })
+
+  expect(loginResponse.status()).toBe(401)
+  const body = (await loginResponse.json()) as { error?: string }
+  expect(body.error).toBe('invalid_credentials')
+})
+
+test('login request fails when X-Tenant-Id header is missing', async ({ request }) => {
+  const loginResponse = await request.post(`${apiBaseUrl}/api/auth/login`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: {
+      email: 'admin@cmms.local',
+      password: 'Naotemsenha0(',
+    },
+  })
+
+  expect(loginResponse.status()).toBe(400)
+  const body = (await loginResponse.json()) as { error?: string }
+  expect(body.error).toBe('tenant_resolution_failed')
+})
+
 test('policy guard denies anonymous and allows admin_master for protected endpoints', async ({ request }) => {
   const noTokenResponse = await request.get(`${apiBaseUrl}/api/tasks`, {
     headers: {
