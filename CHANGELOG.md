@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.34-kanban-delete-isolation-cleanup] - 2026-04-18
+
+### Added
+- `DELETE /api/tasks/{id}` (`AdminMasterOnly`): remove task do tenant atual; logs de auditoria em cascata.
+- `scripts/delete-kanban-task.ps1`: helper para apagar uma task por GUID (usa `task.ps1 login` + mesmo tenant do cache).
+
+### Changed
+- `tenant-isolation.spec.ts`: bloco `finally` chama DELETE nas tasks criadas no teste para nao deixar cards `[ISOL-A]` / `[ISOL-B]` no quadro (cleanup tolera API sem a rota).
+
+### Notes
+- Task `e37581ca-2854-4445-8400-8dff64f5a469` (`[ISOL-A] tenant-isolation ...`) era registro criado pelo POST do teste de isolamento; apos **rebuild** da imagem/container da API, remover com `scripts/delete-kanban-task.ps1 -Id 'e37581ca-2854-4445-8400-8dff64f5a469'` ou equivalente.
+
 ## [0.1.33-kanban-closed-sort-closedat] - 2026-04-17
 
 ### Changed

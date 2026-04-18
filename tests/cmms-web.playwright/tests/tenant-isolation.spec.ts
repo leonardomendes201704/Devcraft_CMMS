@@ -17,6 +17,13 @@ function headersJson(token: string, tenantId: string) {
   }
 }
 
+function headersDelete(token: string, tenantId: string) {
+  return {
+    Authorization: `Bearer ${token}`,
+    'X-Tenant-Id': tenantId,
+  }
+}
+
 async function loginAsMaster(request: APIRequestContext, tenantId: string) {
   const res = await request.post(`${apiBaseUrl}/api/auth/login`, {
     headers: {
@@ -69,27 +76,37 @@ test('lista de Kanban tasks nao cruza tenants (token e header alinhados)', async
 
   expect(taskA.id).not.toBe(taskB.id)
 
-  const listA = await request.get(`${apiBaseUrl}/api/tasks`, {
-    headers: {
-      Authorization: `Bearer ${tokenA}`,
-      'X-Tenant-Id': tenantA,
-    },
-  })
-  expect(listA.ok()).toBeTruthy()
-  const tasksA = (await listA.json()) as { id: string }[]
-  const idsA = new Set(tasksA.map((t) => t.id))
-  expect(idsA.has(taskA.id)).toBeTruthy()
-  expect(idsA.has(taskB.id)).toBeFalsy()
+  try {
+    const listA = await request.get(`${apiBaseUrl}/api/tasks`, {
+      headers: {
+        Authorization: `Bearer ${tokenA}`,
+        'X-Tenant-Id': tenantA,
+      },
+    })
+    expect(listA.ok()).toBeTruthy()
+    const tasksA = (await listA.json()) as { id: string }[]
+    const idsA = new Set(tasksA.map((t) => t.id))
+    expect(idsA.has(taskA.id)).toBeTruthy()
+    expect(idsA.has(taskB.id)).toBeFalsy()
 
-  const listB = await request.get(`${apiBaseUrl}/api/tasks`, {
-    headers: {
-      Authorization: `Bearer ${tokenB}`,
-      'X-Tenant-Id': tenantB,
-    },
-  })
-  expect(listB.ok()).toBeTruthy()
-  const tasksB = (await listB.json()) as { id: string }[]
-  const idsB = new Set(tasksB.map((t) => t.id))
-  expect(idsB.has(taskB.id)).toBeTruthy()
-  expect(idsB.has(taskA.id)).toBeFalsy()
+    const listB = await request.get(`${apiBaseUrl}/api/tasks`, {
+      headers: {
+        Authorization: `Bearer ${tokenB}`,
+        'X-Tenant-Id': tenantB,
+      },
+    })
+    expect(listB.ok()).toBeTruthy()
+    const tasksB = (await listB.json()) as { id: string }[]
+    const idsB = new Set(tasksB.map((t) => t.id))
+    expect(idsB.has(taskB.id)).toBeTruthy()
+    expect(idsB.has(taskA.id)).toBeFalsy()
+  } finally {
+    // Limpeza para nao poluir o quadro; ignora falha se a API em 8117 for imagem antiga sem DELETE.
+    await request.delete(`${apiBaseUrl}/api/tasks/${taskA.id}`, {
+      headers: headersDelete(tokenA, tenantA),
+    })
+    await request.delete(`${apiBaseUrl}/api/tasks/${taskB.id}`, {
+      headers: headersDelete(tokenB, tenantB),
+    })
+  }
 })

@@ -63,6 +63,20 @@ public sealed class TasksController(AppDbContext dbContext) : ControllerBase
         return Created($"/api/tasks/{task.Id}", task.ToResponse());
     }
 
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var task = await _dbContext.KanbanTasks.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        if (task is null)
+        {
+            return NotFound();
+        }
+
+        _dbContext.KanbanTasks.Remove(task);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return NoContent();
+    }
+
     [HttpPatch("{id:guid}/status")]
     public async Task<ActionResult<KanbanTaskResponse>> UpdateStatusAsync(Guid id, [FromBody] UpdateTaskStatusRequest request, CancellationToken cancellationToken)
     {
