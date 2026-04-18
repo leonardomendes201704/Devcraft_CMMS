@@ -36,6 +36,7 @@
 | TASK-REQ-2026-04-18-04 | Auth baseline: testes API login JWT, 401 e tenant (auth-api.spec) | closed | medium | Kanban API task: `4bad7f7f-73af-4771-9aaf-55109d8f3388`, start: `2026-04-17 21:25:02 -03:00`, end: `2026-04-17 21:25:23 -03:00`, spent `0.5h`, evidencia api + Playwright 6 passed |
 | TASK-REQ-2026-04-18-05 | Master admin bootstrap: fechamento retroativo (codigo ja entregue) | closed | medium | Kanban API task: `bfbfd387-96ba-41cd-97de-8cf1932a7bcc`, spent `0.25h`, evidencia api |
 | TASK-REQ-2026-04-18-06 | Testes de integracao auth allow/deny (technician 403, token invalido 401) | closed | medium | Kanban API task: `7b27e5d5-407f-4472-a272-caaebea62905`, start: `2026-04-17 21:36:23 -03:00`, end: `2026-04-17 21:37:00 -03:00`, spent `0.5h`, evidencia api + Playwright `auth-api.spec.ts` 8 passed |
+| TASK-REQ-2026-04-18-07 | Regressao isolamento Kanban entre tenants (dois X-Tenant-Id) | closed | medium | Kanban API task: `c69e2349-8636-4b35-bdff-44d9406db65e`, start: `2026-04-17 21:54:33 -03:00`, end: `2026-04-17 21:55:10 -03:00`, spent `0.5h`, evidencia api + Playwright `tenant-isolation.spec.ts` 1 passed |
 
 ## Transition Log
 
@@ -116,6 +117,9 @@
 | TASK-REQ-2026-04-18-06 | new -> active | 2026-04-17 21:36:23 -03:00 (LOCAL) | Task `7b27e5d5...` STORY 2871f2a6 (allow/deny) |
 | TASK-REQ-2026-04-18-06 | active -> resolved | 2026-04-17 21:36:58 -03:00 (LOCAL) | Dois testes novos em `auth-api.spec.ts`; Playwright 8/8; evidencia api |
 | TASK-REQ-2026-04-18-06 | resolved -> closed | 2026-04-17 21:37:00 -03:00 (LOCAL) | `spentHours=0.5`, lead 7.14h |
+| TASK-REQ-2026-04-18-07 | new -> active | 2026-04-17 21:54:33 -03:00 (LOCAL) | Task `c69e2349...` STORY 96fa1ffd (isolamento tenant) |
+| TASK-REQ-2026-04-18-07 | active -> resolved | 2026-04-17 21:54:58 -03:00 (LOCAL) | Spec `tenant-isolation.spec.ts`; Playwright 1/1; evidencia api |
+| TASK-REQ-2026-04-18-07 | resolved -> closed | 2026-04-17 21:55:10 -03:00 (LOCAL) | `spentHours=0.5`, lead 7.44h |
 
 ## Baseline Done
 

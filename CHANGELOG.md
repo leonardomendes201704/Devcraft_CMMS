@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.31-tenant-isolation-regression] - 2026-04-17
+
+### Added
+- `tests/cmms-web.playwright/tests/tenant-isolation.spec.ts`: regressao de **isolamento multi-tenant** — login bootstrap do master em dois `X-Tenant-Id` distintos, criacao de Kanban task em cada um e verificacao de que `GET /api/tasks` nao devolve o `id` da task do outro tenant quando token e header permanecem no mesmo tenant.
+
+Kanban task: `c69e2349-8636-4b35-bdff-44d9406db65e` (`[TASK] Isolation regression tests across tenants`), start: `2026-04-17 21:54:33 -03:00`, end: `2026-04-17 21:55:10 -03:00`, spent final: `0.5h`, evidencia api (Playwright 1 passed).
+
 ## [0.1.30-auth-api-allow-deny] - 2026-04-17
 
 ### Added
