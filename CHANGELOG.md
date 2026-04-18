@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.26-playwright-kanban-e2e-task-cleanup] - 2026-04-18
+
+### Added
+- Evidencia em `public/evidences/` para fechamento retroativo da task Playwright orfa `0be09501-1afc-476d-b822-d6e18dd80586` (`Validacao E2E Kanban`), criada pelo fluxo de teste e sem lifecycle.
+
+Kanban task: `0be09501-1afc-476d-b822-d6e18dd80586`, end: `2026-04-17 21:18 -03:00`, spent final: `0.1h`, 1 evidencia imagem.
+
 ## [0.1.25-kanban-card-ux-retro-close] - 2026-04-18
 
 ### Added

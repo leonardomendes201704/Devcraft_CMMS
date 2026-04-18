@@ -31,6 +31,7 @@
 | TASK-REQ-2026-04-17-21 | Kanban: faixa de mensagens apenas em erro; sem Saving ao editar card | closed | medium | Kanban API task: `bd127c67-26cc-438e-821e-7e164f3e1f90`, start: `2026-04-17 20:29:45 -03:00`, end: `2026-04-17 20:31:40 -03:00`, spent final: `0.5h`, spec opcional `kanban-message-banner.spec.ts` + `data-testid="kanban-notice-banner"` |
 | TASK-REQ-2026-04-17-22 | Mensagens de erro legiveis (problem+json + PT-BR, sem JSON bruto no aviso) | closed | medium | Kanban API task: `9cfce373-3492-489e-9b96-f00ca79f05a4`, start: `2026-04-17 20:35:20 -03:00`, end: `2026-04-17 20:35:42 -03:00`, spent final: `0.25h`, evidencia api |
 | TASK-REQ-2026-04-18-01 | Fechar tasks duplicadas Playwright do card Kanban (242446cc, db327952) com evidencia retroativa | closed | low | Kanban API: `242446cc-c243-41ec-b7f2-63f4006d9cdb` e `db327952-d10c-4f90-9622-b206ba0c8617`, end: `2026-04-17 21:04 -03:00` / `2026-04-17 21:05 -03:00`, spent `0.1h` cada; duplicam escopo da task `142be898-78e5-4095-bd42-68e7a1a5f729` |
+| TASK-REQ-2026-04-18-02 | Fechar task orfa Playwright Validacao E2E Kanban (0be09501) | closed | low | Kanban API task: `0be09501-1afc-476d-b822-d6e18dd80586`, end: `2026-04-17 21:18 -03:00`, spent `0.1h`, evidencia imagem retroativa |
 
 ## Transition Log
 
@@ -96,6 +97,9 @@
 | TASK-REQ-2026-04-18-01 | new -> active | 2026-04-17 21:03 -03:00 (LOCAL) | Regularizar duplicatas Playwright do card Kanban presas em NEW |
 | TASK-REQ-2026-04-18-01 | active -> resolved | 2026-04-17 21:04 -03:00 (LOCAL) | Evidencias imagem retroativas anexadas via task.ps1 |
 | TASK-REQ-2026-04-18-01 | resolved -> closed | 2026-04-17 21:05 -03:00 (LOCAL) | Tasks `242446cc...` e `db327952...` fechadas com `spentHours=0.1` cada; PNGs em `public/evidences/` |
+| TASK-REQ-2026-04-18-02 | new -> active | 2026-04-17 21:17 -03:00 (LOCAL) | Task orfa `0be09501...` (Validacao E2E Kanban) presa em NEW |
+| TASK-REQ-2026-04-18-02 | active -> resolved | 2026-04-17 21:18 -03:00 (LOCAL) | Evidencia imagem retroativa anexada |
+| TASK-REQ-2026-04-18-02 | resolved -> closed | 2026-04-17 21:18 -03:00 (LOCAL) | Close com `spentHours=0.1`; PNG novo em `public/evidences/` |
 
 ## Baseline Done
 
