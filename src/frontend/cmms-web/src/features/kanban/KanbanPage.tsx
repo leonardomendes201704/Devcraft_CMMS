@@ -352,7 +352,7 @@ export function KanbanPage() {
           {taskStatusOrder.map((status) => {
             const columnTasksRaw = filteredTasks.filter((task) => task.status === status)
             const columnTasks =
-              status === 'closed' ? [...columnTasksRaw].sort(compareClosedTasksByRecentUpdate) : columnTasksRaw
+              status === 'closed' ? [...columnTasksRaw].sort(compareClosedTasksByClosedAtDesc) : columnTasksRaw
             const style = columnStyleByStatus[status]
             return (
               <article
@@ -832,18 +832,12 @@ function isApiEvidence(evidence: TaskEvidence): boolean {
   return typeof evidence.payloadJson === 'string' && evidence.payloadJson.trim().length > 0
 }
 
-/** Coluna Closed: mais recente no topo (UpdatedAtUtc desc; fallback ClosedAt / CreatedAt). */
-function compareClosedTasksByRecentUpdate(a: KanbanTask, b: KanbanTask): number {
-  return closedColumnSortKey(b) - closedColumnSortKey(a)
+/** Coluna Closed: ultimo encerramento no topo (`closedAtUtc` desc; fallback `createdAtUtc`). */
+function compareClosedTasksByClosedAtDesc(a: KanbanTask, b: KanbanTask): number {
+  return closedAtUtcSortKey(b) - closedAtUtcSortKey(a)
 }
 
-function closedColumnSortKey(task: KanbanTask): number {
-  if (task.updatedAtUtc) {
-    const t = Date.parse(task.updatedAtUtc)
-    if (!Number.isNaN(t)) {
-      return t
-    }
-  }
+function closedAtUtcSortKey(task: KanbanTask): number {
   if (task.closedAtUtc) {
     const t = Date.parse(task.closedAtUtc)
     if (!Number.isNaN(t)) {

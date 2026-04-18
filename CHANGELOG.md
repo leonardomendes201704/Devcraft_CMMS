@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.33-kanban-closed-sort-closedat] - 2026-04-17
+
+### Changed
+- `KanbanPage`: coluna **Closed** ordena por **`closedAtUtc` descendente** (encerramento mais recente no topo); fallback **`createdAtUtc`** quando `closedAtUtc` ausente.
+
 ## [0.1.32-kanban-closed-sort-updated] - 2026-04-17
 
 ### Changed
