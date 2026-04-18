@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.25-kanban-card-ux-retro-close] - 2026-04-18
+
+### Added
+- Evidencias em `public/evidences/` para fechamento retroativo de duas tasks Kanban duplicadas do fluxo Playwright (`kanban-card-ux.spec.ts`), alinhadas a entrega principal `142be898-78e5-4095-bd42-68e7a1a5f729`.
+
+Kanban tasks: `242446cc-c243-41ec-b7f2-63f4006d9cdb` e `db327952-d10c-4f90-9622-b206ba0c8617` (`[BUG] Card Kanban UX`), end: `2026-04-17 21:04 -03:00` / `2026-04-17 21:05 -03:00`, spent final: `0.1h` cada, 1 evidencia imagem cada (retroativo regressao card Kanban).
+
 ## [0.1.24-api-error-user-facing] - 2026-04-17
 
 ### Changed
