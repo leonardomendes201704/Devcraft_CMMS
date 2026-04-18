@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.29-master-admin-bootstrap-retro-close] - 2026-04-17
+
+### Changed
+- Governanca Kanban: task `bfbfd387-96ba-41cd-97de-8cf1932a7bcc` fechada retroativamente; implementacao ja existente (`AuthController` bootstrap no login, `Auth:MasterAdmin*` em appsettings, `CredentialPolicy`, lockout).
+
+Kanban task: `bfbfd387-96ba-41cd-97de-8cf1932a7bcc` (`[TASK] Master admin bootstrap seed and safeguards`), start: `2026-04-17 21:35:11 -03:00`, end: `2026-04-17 21:35:11 -03:00`, spent final: `0.25h`, evidencia api.
+
 ## [0.1.28-auth-api-baseline] - 2026-04-17
 
 ### Added

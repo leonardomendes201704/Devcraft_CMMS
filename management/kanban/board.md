@@ -34,6 +34,7 @@
 | TASK-REQ-2026-04-18-02 | Fechar task orfa Playwright Validacao E2E Kanban (0be09501) | closed | low | Kanban API task: `0be09501-1afc-476d-b822-d6e18dd80586`, end: `2026-04-17 21:18 -03:00`, spent `0.1h`, evidencia imagem retroativa |
 | TASK-REQ-2026-04-18-03 | Lote: 7 tasks orfas Playwright (E2E Kanban + evidence) | closed | low | IDs na entrada `0.1.27` do CHANGELOG; spent `0.1h` cada; escopo coberto por specs `kanban.spec` / `users-admin` |
 | TASK-REQ-2026-04-18-04 | Auth baseline: testes API login JWT, 401 e tenant (auth-api.spec) | closed | medium | Kanban API task: `4bad7f7f-73af-4771-9aaf-55109d8f3388`, start: `2026-04-17 21:25:02 -03:00`, end: `2026-04-17 21:25:23 -03:00`, spent `0.5h`, evidencia api + Playwright 6 passed |
+| TASK-REQ-2026-04-18-05 | Master admin bootstrap: fechamento retroativo (codigo ja entregue) | closed | medium | Kanban API task: `bfbfd387-96ba-41cd-97de-8cf1932a7bcc`, spent `0.25h`, evidencia api |
 
 ## Transition Log
 
@@ -108,6 +109,9 @@
 | TASK-REQ-2026-04-18-04 | new -> active | 2026-04-17 21:25:02 -03:00 (LOCAL) | Task `4bad7f7f...` Auth baseline (STORY 50a44625) |
 | TASK-REQ-2026-04-18-04 | active -> resolved | 2026-04-17 21:25:23 -03:00 (LOCAL) | auth-api.spec estendido; Playwright 6/6; evidencia api |
 | TASK-REQ-2026-04-18-04 | resolved -> closed | 2026-04-17 21:25:23 -03:00 (LOCAL) | Close `spentHours=0.5` |
+| TASK-REQ-2026-04-18-05 | new -> active | 2026-04-17 21:35:11 -03:00 (LOCAL) | Regularizar task bootstrap master (STORY 50a44625) |
+| TASK-REQ-2026-04-18-05 | active -> resolved | 2026-04-17 21:35:11 -03:00 (LOCAL) | Evidencia api (AuthController + appsettings) |
+| TASK-REQ-2026-04-18-05 | resolved -> closed | 2026-04-17 21:35:11 -03:00 (LOCAL) | `spentHours=0.25` |
 
 ## Baseline Done
 
