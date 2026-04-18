@@ -25,6 +25,10 @@ Testes complementares (`auth-api.spec.ts`, `tenant-isolation.spec.ts`, etc.) con
    - Gerados em `tests/cmms-web.playwright/evidence-output/api/` via `writeApiRegressionArtifact`.  
    - Pasta **gitignored** (artefatos locais/CI); serve para inspecao manual e depuracao, nao para o modal do Kanban.
 
+## Casos em Markdown
+
+Descricao dos casos e pastas de evidencias: `tests/cmms-web.playwright/casos-de-teste/README.md` (um `.md` por spec).
+
 ## Como rodar
 
 Na raiz do frontend de testes:

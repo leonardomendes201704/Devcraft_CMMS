@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.36-playwright-casos-md] - 2026-04-18
+
+### Added
+- `tests/cmms-web.playwright/casos-de-teste/`: `README.md` com pastas de evidencias e um `.md` por spec (casos em PT-BR).
+
+### Fixed
+- `users-admin.spec.ts`: assercao da lista de usuarios usa `heading` nivel 1 para evitar strict mode com dois headings "Users".
+
 ## [0.1.35-regression-users-depts-jobs] - 2026-04-18
 
 ### Added

@@ -37,7 +37,7 @@ test('user admin screen creates and updates user', async ({ page, request }, tes
 
   await page.getByRole('link', { name: /Usuarios|Users|User Admin/i }).click()
   await expect(page).toHaveURL(/\/app\/admin\/users$/)
-  await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Users', level: 1 })).toBeVisible()
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 4, 'user list page opened', { segment: evidenceSegment })
 
   await page.getByRole('link', { name: 'Create user' }).click()
