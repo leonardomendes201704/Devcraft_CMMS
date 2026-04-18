@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { listProjectChangelog } from '../../shared/api/changelog'
 import { completeTask, createTask, listTasks, updateTaskEffort, updateTaskStatus } from '../../shared/api/tasks'
+import { extractErrorMessage } from '../users/utils'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { taskStatusLabel, taskStatusOrder, taskTypeLabel, type KanbanTask, type TaskEvidence, type TaskStatus, type TaskType } from './types'
 
@@ -257,7 +258,11 @@ export function KanbanPage() {
     )
   }
 
-  const isSaving = createTaskMutation.isPending || statusMutation.isPending || effortMutation.isPending || completeMutation.isPending
+  const loadErrorMessage = tasksQuery.isError
+    ? 'Não foi possível carregar as tarefas. Verifique a API e o cabeçalho do tenant.'
+    : null
+  const noticeMessage = saveError?.trim() || loadErrorMessage
+  const hasNoticeMessage = Boolean(noticeMessage?.trim())
 
   const columnStyleByStatus: Record<TaskStatus, { column: string; header: string; card: string; badge: string; input: string }> = {
     new: {
@@ -306,12 +311,14 @@ export function KanbanPage() {
           }
         />
 
-        <section className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
-          {tasksQuery.isLoading ? 'Loading tasks from API...' : null}
-          {tasksQuery.isError ? 'Failed to load tasks. Verify API and tenant header.' : null}
-          {saveError ? saveError : null}
-          {isSaving ? 'Saving changes...' : null}
-        </section>
+        {hasNoticeMessage ? (
+          <section
+            className="mb-4 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700"
+            data-testid="kanban-notice-banner"
+          >
+            {noticeMessage}
+          </section>
+        ) : null}
 
         <section className="mb-5 grid gap-4 rounded-2xl border border-slate-200 bg-white/85 p-4 lg:grid-cols-[2fr_auto]">
           <div className="grid gap-2">
@@ -878,10 +885,3 @@ function parseApiPayload(payloadJson: string | null): unknown | null {
   }
 }
 
-function extractErrorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message.trim()
-  }
-
-  return 'Operation failed. Please review task rules and try again.'
-}

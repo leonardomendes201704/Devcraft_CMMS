@@ -14,9 +14,7 @@ dotnet run --project tools/KanbanTaskManager -- close --tenant <guid> --task <ta
 
 ## Provider
 
-- `--provider auto` (padrao): tenta PostgreSQL e cai para SQLite fallback se indisponivel.
 - `--provider postgres`
-- `--provider sqlite`
 
 ## Observacoes
 

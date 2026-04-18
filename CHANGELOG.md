@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.24-api-error-user-facing] - 2026-04-17
+
+### Changed
+- `shared/api/http.ts`: leitura do corpo de erro como texto e parse JSON quando o payload comeca com `{`, cobrindo `application/problem+json` (antes o cliente mostrava o JSON inteiro porque so tratava `application/json`).
+- `shared/api/mapApiMessageToPtBr.ts`: mapa de mensagens conhecidas do backend (tasks, departments, jobs, usuarios) para PT-BR; regex para transicoes de status bloqueadas.
+- `features/users/utils.ts`: `extractErrorMessage` passa mensagens pelo mapa PT-BR.
+- `KanbanPage`: mensagem de falha ao carregar lista em portugues; removido `extractErrorMessage` duplicado (usa `users/utils`).
+
+Kanban task: `9cfce373-3492-489e-9b96-f00ca79f05a4` (`[CHG] Mensagens de erro legiveis no aviso (PT-BR, sem corpo bruto)`), start: `2026-04-17 20:35:20 -03:00`, end: `2026-04-17 20:35:42 -03:00`, spent final: `0.25h`, evidencia api (payload do tratamento de erro).
+
+## [0.1.23-kanban-notice-banner] - 2026-04-17
+
+### Changed
+- KanbanPage: faixa abaixo do header (`data-testid="kanban-notice-banner"`) so aparece quando ha erro de carregamento da lista ou `saveError`, no estilo da lista de usuarios (sem area vazia fixa).
+- KanbanPage: removidos textos `Loading tasks from API...` e `Saving changes...` na faixa; edicoes no card e criacao de task ficam silenciosas em caso de sucesso.
+
+### Added
+- Playwright opcional `tests/cmms-web.playwright/tests/kanban-message-banner.spec.ts`: valida ausencia da faixa em estado normal e apos blur no spent; defina `KANBAN_UX_TASK_ID` para anexar evidencia a uma task existente.
+
+Kanban task: `bd127c67-26cc-438e-821e-7e164f3e1f90` (`[UX] Faixa de mensagens do Kanban apenas em erro; sem Saving ao editar card`), start: `2026-04-17 20:29:45 -03:00`, end: `2026-04-17 20:31:40 -03:00`, spent final: `0.5h`, 1 evidencia Playwright.
+
 ## [0.1.22-kanban-card-ux] - 2026-04-17
 
 ### Changed

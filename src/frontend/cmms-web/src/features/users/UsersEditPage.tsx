@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAuthUserById, resetAuthUserPassword, updateAuthUser } from '../../shared/api/users'
+import { listAuthDepartments } from '../../shared/api/departments'
+import { listAuthJobs } from '../../shared/api/jobs'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { UserForm, type UserFormValues } from './components/UserForm'
 import { extractErrorMessage } from './utils'
@@ -14,6 +16,8 @@ const defaultValues: UserFormValues = {
   fullName: '',
   displayName: '',
   phoneE164: '',
+  departmentId: '',
+  jobId: '',
   jobTitle: '',
   department: '',
   employeeCode: '',
@@ -39,6 +43,14 @@ export function UsersEditPage() {
     queryFn: () => getAuthUserById(userId),
     enabled: Boolean(userId),
   })
+  const departmentsQuery = useQuery({
+    queryKey: ['auth-departments'],
+    queryFn: listAuthDepartments,
+  })
+  const jobsQuery = useQuery({
+    queryKey: ['auth-jobs'],
+    queryFn: () => listAuthJobs(),
+  })
 
   useEffect(() => {
     if (!userQuery.data) {
@@ -54,6 +66,8 @@ export function UsersEditPage() {
       fullName: userQuery.data.profile?.fullName ?? '',
       displayName: userQuery.data.profile?.displayName ?? '',
       phoneE164: userQuery.data.profile?.phoneE164 ?? '',
+      departmentId: userQuery.data.profile?.departmentId ?? '',
+      jobId: userQuery.data.profile?.jobId ?? '',
       jobTitle: userQuery.data.profile?.jobTitle ?? '',
       department: userQuery.data.profile?.department ?? '',
       employeeCode: userQuery.data.profile?.employeeCode ?? '',
@@ -77,6 +91,8 @@ export function UsersEditPage() {
           fullName: nextValues.fullName.trim(),
           displayName: nextValues.displayName.trim() || null,
           phoneE164: nextValues.phoneE164.trim() || null,
+          departmentId: nextValues.departmentId || null,
+          jobId: nextValues.jobId || null,
           jobTitle: nextValues.jobTitle.trim() || null,
           department: nextValues.department.trim() || null,
           employeeCode: nextValues.employeeCode.trim() || null,
@@ -109,6 +125,8 @@ export function UsersEditPage() {
   })
   const noticeMessage = userQuery.isError
     ? 'Failed to load user details.'
+    : departmentsQuery.isError || jobsQuery.isError
+      ? 'Failed to load department/job catalogs.'
     : saveError
       ? saveError
       : updateUserMutation.isPending || resetPasswordMutation.isPending
@@ -166,6 +184,8 @@ export function UsersEditPage() {
               isSubmitting={updateUserMutation.isPending}
               disableEmail
               submitLabel="Save changes"
+              departmentOptions={(departmentsQuery.data ?? []).map((department) => ({ id: department.id, name: department.name }))}
+              jobOptions={(jobsQuery.data ?? []).map((job) => ({ id: job.id, name: job.name, departmentId: job.departmentId }))}
               onChange={setValues}
               onSubmit={handleSave}
             />

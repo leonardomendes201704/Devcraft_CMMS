@@ -1,4 +1,5 @@
 import { getAccessToken } from '../auth/session'
+import { mapApiMessageToPtBr } from './mapApiMessageToPtBr'
 
 const defaultTenantId = '11111111-1111-1111-1111-111111111111'
 
@@ -22,7 +23,7 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
   if (!response.ok) {
     const errorMessage = await parseApiErrorMessage(response)
-    throw new Error(errorMessage || `Request failed (${response.status})`)
+    throw new Error(errorMessage || mapApiMessageToPtBr(`Request failed (${response.status})`))
   }
 
   if (response.status === 204) {
@@ -33,38 +34,49 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 }
 
 async function parseApiErrorMessage(response: Response): Promise<string> {
-  const contentType = response.headers.get('content-type') ?? ''
+  const raw = (await response.text()).trim()
 
-  if (contentType.includes('application/json')) {
-    const payload = (await response.json()) as {
-      title?: string
-      detail?: string
-      errors?: Record<string, string[]>
-      message?: string
-    }
-
-    const validationMessages = Object.values(payload.errors ?? {})
-      .flat()
-      .map((message) => message.trim())
-      .filter(Boolean)
-
-    if (validationMessages.length > 0) {
-      return validationMessages.join(' ')
-    }
-
-    if (payload.detail?.trim()) {
-      return payload.detail.trim()
-    }
-
-    if (payload.title?.trim()) {
-      return payload.title.trim()
-    }
-
-    if (payload.message?.trim()) {
-      return payload.message.trim()
-    }
+  if (!raw) {
+    return mapApiMessageToPtBr(`Request failed (${response.status})`)
   }
 
-  const message = (await response.text()).trim()
-  return message
+  if (!raw.startsWith('{')) {
+    return mapApiMessageToPtBr(raw)
+  }
+
+  let payload: {
+    title?: string
+    detail?: string
+    errors?: Record<string, string[]>
+    message?: string
+  }
+
+  try {
+    payload = JSON.parse(raw) as typeof payload
+  } catch {
+    return mapApiMessageToPtBr(raw)
+  }
+
+  const validationMessages = Object.values(payload.errors ?? {})
+    .flat()
+    .map((message) => message.trim())
+    .filter(Boolean)
+
+  if (validationMessages.length > 0) {
+    return mapApiMessageToPtBr(validationMessages.join(' '))
+  }
+
+  if (payload.detail?.trim()) {
+    return mapApiMessageToPtBr(payload.detail.trim())
+  }
+
+  if (payload.message?.trim()) {
+    return mapApiMessageToPtBr(payload.message.trim())
+  }
+
+  if (payload.title?.trim()) {
+    return mapApiMessageToPtBr(payload.title.trim())
+  }
+
+  return mapApiMessageToPtBr(`Request failed (${response.status})`)
 }

@@ -17,11 +17,9 @@
 # Logs
 *.log
 
-# Local databases
-*.sqlite
-*.sqlite-shm
-*.sqlite-wal
-
 # OS
 Thumbs.db
 .DS_Store
+
+# Playwright (artefatos regeneraveis localmente)
+tests/cmms-web.playwright/test-results/

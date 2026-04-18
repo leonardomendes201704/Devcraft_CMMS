@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createAuthUser, type AuthRole } from '../../shared/api/users'
+import { listAuthDepartments } from '../../shared/api/departments'
+import { listAuthJobs } from '../../shared/api/jobs'
 import { PageHeader } from '../../shared/ui/PageHeader'
 import { UserForm } from './components/UserForm'
 import { extractErrorMessage } from './utils'
@@ -18,6 +20,8 @@ export function UsersCreatePage() {
     fullName: '',
     displayName: '',
     phoneE164: '',
+    departmentId: '',
+    jobId: '',
     jobTitle: '',
     department: '',
     employeeCode: '',
@@ -40,8 +44,18 @@ export function UsersCreatePage() {
     },
     onError: (error) => setSaveError(extractErrorMessage(error)),
   })
+  const departmentsQuery = useQuery({
+    queryKey: ['auth-departments'],
+    queryFn: listAuthDepartments,
+  })
+  const jobsQuery = useQuery({
+    queryKey: ['auth-jobs'],
+    queryFn: () => listAuthJobs(),
+  })
   const noticeMessage = saveError
     ? saveError
+    : departmentsQuery.isError || jobsQuery.isError
+      ? 'Failed to load department/job catalogs.'
     : createUserMutation.isPending
       ? 'Saving changes...'
       : null
@@ -63,6 +77,8 @@ export function UsersCreatePage() {
         fullName: values.fullName.trim(),
         displayName: values.displayName.trim() || null,
         phoneE164: values.phoneE164.trim() || null,
+        departmentId: values.departmentId || null,
+        jobId: values.jobId || null,
         jobTitle: values.jobTitle.trim() || null,
         department: values.department.trim() || null,
         employeeCode: values.employeeCode.trim() || null,
@@ -105,6 +121,8 @@ export function UsersCreatePage() {
           values={values}
           isSubmitting={createUserMutation.isPending}
           submitLabel="Create user"
+          departmentOptions={(departmentsQuery.data ?? []).map((department) => ({ id: department.id, name: department.name }))}
+          jobOptions={(jobsQuery.data ?? []).map((job) => ({ id: job.id, name: job.name, departmentId: job.departmentId }))}
           onChange={setValues}
           onSubmit={handleSubmit}
         />

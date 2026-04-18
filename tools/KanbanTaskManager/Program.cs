@@ -1,7 +1,6 @@
 using System.Data.Common;
 using System.Globalization;
 using System.Text.Json;
-using Microsoft.Data.Sqlite;
 using Npgsql;
 
 var options = CliOptions.Parse(args);
@@ -314,49 +313,16 @@ internal sealed class DatabaseContext : IAsyncDisposable
         var root = doc.RootElement;
 
         var defaultConnection = root.GetProperty("ConnectionStrings").GetProperty("DefaultConnection").GetString() ?? string.Empty;
-        var fallbackSqlite = root.GetProperty("ConnectionStrings").TryGetProperty("DevelopmentFallbackSqlite", out var sqliteValue)
-            ? sqliteValue.GetString() ?? "devcraft_cmms_dev_fallback.sqlite"
-            : "devcraft_cmms_dev_fallback.sqlite";
-
         var provider = options.Provider;
-        DbConnection conn;
-
-        if (provider == "postgres" || (provider == "auto" && await CanConnectPostgresAsync(defaultConnection)))
+        if (provider is not ("postgres" or "auto"))
         {
-            conn = new NpgsqlConnection(defaultConnection);
-            provider = "postgres";
-        }
-        else
-        {
-            var sqlitePath = Path.GetFullPath(Path.Combine(options.WorkspaceRoot, "src", "backend", "CMMS.Api", fallbackSqlite));
-            Directory.CreateDirectory(Path.GetDirectoryName(sqlitePath)!);
-            conn = new SqliteConnection($"Data Source={sqlitePath}");
-            provider = "sqlite";
+            throw new ArgumentException($"unsupported provider '{provider}'. Use --provider postgres.");
         }
 
+        DbConnection conn = new NpgsqlConnection(defaultConnection);
+        provider = "postgres";
         await conn.OpenAsync();
         return new DatabaseContext { Connection = conn, Provider = provider };
-    }
-
-    private static async Task<bool> CanConnectPostgresAsync(string connectionString)
-    {
-        try
-        {
-            var builder = new NpgsqlConnectionStringBuilder(connectionString)
-            {
-                Timeout = 2,
-                CommandTimeout = 2
-            };
-
-            await using var conn = new NpgsqlConnection(builder.ConnectionString);
-            await conn.OpenAsync();
-            await conn.CloseAsync();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 
     public DbCommand CreateCommand(string sql, DbTransaction? transaction = null)
@@ -454,7 +420,7 @@ internal sealed class CliOptions
 {
     public required string Command { get; init; }
     public required Dictionary<string, string> Args { get; init; }
-    public string Provider => GetString("provider")?.ToLowerInvariant() ?? "auto";
+    public string Provider => GetString("provider")?.ToLowerInvariant() ?? "postgres";
     public string WorkspaceRoot => GetString("workspace") ?? Directory.GetCurrentDirectory();
 
     public string? GetString(string name) => Args.TryGetValue(name, out var v) ? v : null;
@@ -535,7 +501,7 @@ internal sealed class CliOptions
     public static void PrintUsage()
     {
         Console.WriteLine("KanbanTaskManager usage:");
-        Console.WriteLine("  dotnet run --project tools/KanbanTaskManager -- list --tenant <guid> [--provider auto|sqlite|postgres]");
+        Console.WriteLine("  dotnet run --project tools/KanbanTaskManager -- list --tenant <guid> [--provider postgres]");
         Console.WriteLine("  dotnet run --project tools/KanbanTaskManager -- create --tenant <guid> --title <text> --description <text> --type <type> --module <module> --estimate <hours> [--assignee <name>]");
         Console.WriteLine("  dotnet run --project tools/KanbanTaskManager -- set-effort --tenant <guid> --task <guid> --spent <hours>");
         Console.WriteLine("  dotnet run --project tools/KanbanTaskManager -- set-status --tenant <guid> --task <guid> --status <new|active|resolved>");

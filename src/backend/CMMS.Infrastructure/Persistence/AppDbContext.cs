@@ -16,6 +16,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<AuthUser> AuthUsers => Set<AuthUser>();
     public DbSet<AuthUserProfile> AuthUserProfiles => Set<AuthUserProfile>();
     public DbSet<AuthUserAuditLog> AuthUserAuditLogs => Set<AuthUserAuditLog>();
+    public DbSet<AuthDepartment> AuthDepartments => Set<AuthDepartment>();
+    public DbSet<AuthJob> AuthJobs => Set<AuthJob>();
     public DbSet<ProjectChangelogEntry> ProjectChangelogEntries => Set<ProjectChangelogEntry>();
     public DbSet<KanbanTask> KanbanTasks => Set<KanbanTask>();
     public DbSet<KanbanTaskAuditLog> KanbanTaskAuditLogs => Set<KanbanTaskAuditLog>();
@@ -74,6 +76,47 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             entity.Property(x => x.MetadataJson).HasColumnType("TEXT").HasDefaultValue("{}");
             entity.HasIndex(x => new { x.TenantId, x.AuthUserId }).IsUnique();
             entity.HasIndex(x => new { x.TenantId, x.EmployeeCode });
+            entity.HasIndex(x => new { x.TenantId, x.DepartmentId });
+            entity.HasIndex(x => new { x.TenantId, x.JobId });
+            entity.HasOne(x => x.DepartmentEntity)
+                .WithMany(x => x.UserProfiles)
+                .HasForeignKey(x => x.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(x => x.JobEntity)
+                .WithMany(x => x.UserProfiles)
+                .HasForeignKey(x => x.JobId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
+        });
+
+        modelBuilder.Entity<AuthDepartment>(entity =>
+        {
+            entity.ToTable("auth_departments");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.IsActive).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.Name });
+            entity.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+            entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
+        });
+
+        modelBuilder.Entity<AuthJob>(entity =>
+        {
+            entity.ToTable("auth_jobs");
+            entity.HasKey(x => x.Id);
+            entity.Property(x => x.Name).HasMaxLength(128).IsRequired();
+            entity.Property(x => x.Code).HasMaxLength(32).IsRequired();
+            entity.Property(x => x.Description).HasMaxLength(512);
+            entity.Property(x => x.IsActive).IsRequired();
+            entity.HasIndex(x => new { x.TenantId, x.Name });
+            entity.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+            entity.HasIndex(x => new { x.TenantId, x.DepartmentId });
+            entity.HasOne(x => x.Department)
+                .WithMany(x => x.Jobs)
+                .HasForeignKey(x => x.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.HasQueryFilter(x => _currentTenant.TenantId.HasValue && x.TenantId == _currentTenant.TenantId.Value);
         });
 

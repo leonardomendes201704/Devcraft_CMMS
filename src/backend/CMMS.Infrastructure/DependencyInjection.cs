@@ -2,8 +2,6 @@ using CMMS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
-using System.IO;
 
 namespace CMMS.Infrastructure;
 
@@ -14,24 +12,8 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException("Connection string 'DefaultConnection' was not configured.");
 
-        var isDevelopment = string.Equals(
-            configuration["ASPNETCORE_ENVIRONMENT"],
-            "Development",
-            StringComparison.OrdinalIgnoreCase);
-
-        var useSqliteFallback = isDevelopment && !CanConnectToPostgres(connectionString);
-        var fallbackSqlitePath = configuration["ConnectionStrings:DevelopmentFallbackSqlite"]
-            ?? Path.Combine(Environment.CurrentDirectory, "devcraft_cmms_dev_fallback.sqlite");
-        var fallbackSqliteConnectionString = $"Data Source={Path.GetFullPath(fallbackSqlitePath)}";
-
         services.AddDbContext<AppDbContext>(options =>
         {
-            if (useSqliteFallback)
-            {
-                options.UseSqlite(fallbackSqliteConnectionString);
-                return;
-            }
-
             options.UseNpgsql(connectionString, npgsql =>
             {
                 npgsql.MigrationsHistoryTable("__ef_migrations_history", "public");
@@ -39,25 +21,5 @@ public static class DependencyInjection
         });
 
         return services;
-    }
-
-    private static bool CanConnectToPostgres(string connectionString)
-    {
-        try
-        {
-            var builder = new NpgsqlConnectionStringBuilder(connectionString)
-            {
-                Timeout = 2,
-                CommandTimeout = 2
-            };
-
-            using var connection = new NpgsqlConnection(builder.ConnectionString);
-            connection.Open();
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
     }
 }

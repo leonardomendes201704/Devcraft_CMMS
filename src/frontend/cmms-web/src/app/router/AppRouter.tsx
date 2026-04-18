@@ -7,6 +7,14 @@ import { UsersCreatePage } from '../../features/users/UsersCreatePage'
 import { UsersEditPage } from '../../features/users/UsersEditPage'
 import { UsersListPage } from '../../features/users/UsersListPage'
 import { UsersViewPage } from '../../features/users/UsersViewPage'
+import { DepartmentsListPage } from '../../features/departments/DepartmentsListPage'
+import { DepartmentsCreatePage } from '../../features/departments/DepartmentsCreatePage'
+import { DepartmentsEditPage } from '../../features/departments/DepartmentsEditPage'
+import { DepartmentsViewPage } from '../../features/departments/DepartmentsViewPage'
+import { JobsListPage } from '../../features/jobs/JobsListPage'
+import { JobsCreatePage } from '../../features/jobs/JobsCreatePage'
+import { JobsEditPage } from '../../features/jobs/JobsEditPage'
+import { JobsViewPage } from '../../features/jobs/JobsViewPage'
 import { AccessDeniedPage } from '../../features/system/AccessDeniedPage'
 import { getSessionUser, isAuthenticated } from '../../shared/auth/session'
 
@@ -74,6 +82,38 @@ const router = createBrowserRouter([
                 path: 'admin/users/:userId/edit',
                 element: <UsersEditPage />,
               },
+              {
+                path: 'admin/departments',
+                element: <DepartmentsListPage />,
+              },
+              {
+                path: 'admin/departments/create',
+                element: <DepartmentsCreatePage />,
+              },
+              {
+                path: 'admin/departments/:departmentId',
+                element: <DepartmentsViewPage />,
+              },
+              {
+                path: 'admin/departments/:departmentId/edit',
+                element: <DepartmentsEditPage />,
+              },
+              {
+                path: 'admin/jobs',
+                element: <JobsListPage />,
+              },
+              {
+                path: 'admin/jobs/create',
+                element: <JobsCreatePage />,
+              },
+              {
+                path: 'admin/jobs/:jobId',
+                element: <JobsViewPage />,
+              },
+              {
+                path: 'admin/jobs/:jobId/edit',
+                element: <JobsEditPage />,
+              },
             ],
           },
         ],
@@ -85,6 +125,14 @@ const router = createBrowserRouter([
       {
         path: '/admin/users',
         element: <Navigate to="/app/admin/users" replace />,
+      },
+      {
+        path: '/admin/departments',
+        element: <Navigate to="/app/admin/departments" replace />,
+      },
+      {
+        path: '/admin/jobs',
+        element: <Navigate to="/app/admin/jobs" replace />,
       },
     ],
   },

@@ -45,7 +45,8 @@ export function UserSummaryCard({ user }: UserSummaryCardProps) {
           <span className="font-medium text-slate-700">Phone:</span> {profile?.phoneE164 ?? '-'}
         </p>
         <p>
-          <span className="font-medium text-slate-700">Job / Department:</span> {profile?.jobTitle ?? '-'} / {profile?.department ?? '-'}
+          <span className="font-medium text-slate-700">Job / Department:</span>{' '}
+          {profile?.jobName ?? profile?.jobTitle ?? '-'} / {profile?.departmentName ?? profile?.department ?? '-'}
         </p>
         <p>
           <span className="font-medium text-slate-700">Employee Code:</span> {profile?.employeeCode ?? '-'}

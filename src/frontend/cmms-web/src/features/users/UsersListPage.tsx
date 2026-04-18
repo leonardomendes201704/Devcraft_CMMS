@@ -41,7 +41,7 @@ function getStatusSortValue(user: AuthUser) {
 }
 
 function getJobSortValue(user: AuthUser) {
-  return `${user.profile?.jobTitle ?? ''} ${user.profile?.department ?? ''}`.trim()
+  return `${user.profile?.jobName ?? user.profile?.jobTitle ?? ''} ${user.profile?.departmentName ?? user.profile?.department ?? ''}`.trim()
 }
 
 function getSortableDateValue(value?: string | null) {
@@ -130,6 +130,8 @@ export function UsersListPage() {
       const profileFields = [
         user.profile?.fullName,
         user.profile?.displayName,
+        user.profile?.jobName,
+        user.profile?.departmentName,
         user.profile?.jobTitle,
         user.profile?.department,
         user.profile?.employeeCode,
@@ -218,7 +220,7 @@ export function UsersListPage() {
         sortKey: 'job',
         renderCell: (user) => (
           <span className="text-slate-700">
-            {user.profile?.jobTitle ?? '-'} / {user.profile?.department ?? '-'}
+            {user.profile?.jobName ?? user.profile?.jobTitle ?? '-'} / {user.profile?.departmentName ?? user.profile?.department ?? '-'}
           </span>
         ),
       },
@@ -268,7 +270,7 @@ export function UsersListPage() {
       <PageHeader
         eyebrow="Access Control"
         eyebrowClassName="text-emerald-700"
-        title="User Administration"
+        title="Users"
         subtitle="List and manage users through dedicated screens."
         actions={
           <Link className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500" to="/app/admin/users/create">

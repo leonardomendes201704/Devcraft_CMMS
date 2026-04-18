@@ -14,7 +14,9 @@ const resources = {
       shell: {
         home: 'Inicio',
         kanban: 'Kanban',
-        userAdmin: 'Administracao de usuarios',
+        userAdmin: 'Usuarios',
+        departmentAdmin: 'Departamentos',
+        jobAdmin: 'Cargos',
         workspace: 'Workspace',
         logout: 'Sair',
         tenant: 'Tenant',
@@ -41,7 +43,9 @@ const resources = {
       shell: {
         home: 'Home',
         kanban: 'Kanban',
-        userAdmin: 'User administration',
+        userAdmin: 'Users',
+        departmentAdmin: 'Departments',
+        jobAdmin: 'Jobs',
         workspace: 'Workspace',
         logout: 'Logout',
         tenant: 'Tenant',

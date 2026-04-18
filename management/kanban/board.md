@@ -28,6 +28,8 @@
 | TASK-REQ-2026-04-17-18 | Criar skill `.cursor/skills/devcraft-task-lifecycle/` para automatizar ciclo de tasks (login/new/start/resolve/close/evidence/show) e corrigir imagens de evidencia nao visiveis no modal | closed | high | Kanban API task: `fee041b7-5ad0-43e9-982a-722cfd5aeb06`, start: `2026-04-17 20:10:55 -03:00`, end: `2026-04-17 20:12:46 -03:00`, spent final: `1.4h`, evidencias: 1 image (modal "Image unavailable" antes do fix) + 1 api (POST /api/tasks response). Workaround Vite public-dir documentado em LL-009. |
 | TASK-REQ-2026-04-17-19 | Adotar idioma PT-BR como padrao obrigatorio para tasks Kanban (title/description/module/snippets) | closed | medium | Kanban API task: `beb42807-1b3b-4f89-ada0-64a1e57f8053`, start: `2026-04-17 20:18:10 -03:00`, end: `2026-04-17 20:19:48 -03:00`, spent final: `0.5h`, diretrizes atualizadas em `task-lifecycle-directive.md`, `SKILL.md` e `guidelines/README.md` |
 | TASK-REQ-2026-04-17-20 | Corrigir UX do card do Kanban (esconder guid, modal apenas em duplo clique, stopPropagation em spent/status) | closed | high | Kanban API task: `142be898-78e5-4095-bd42-68e7a1a5f729`, start: `2026-04-17 20:20:33 -03:00`, end: `2026-04-17 20:25:25 -03:00`, spent final: `1.1h`, 5 evidencias Playwright + regression spec `kanban-card-ux.spec.ts` |
+| TASK-REQ-2026-04-17-21 | Kanban: faixa de mensagens apenas em erro; sem Saving ao editar card | closed | medium | Kanban API task: `bd127c67-26cc-438e-821e-7e164f3e1f90`, start: `2026-04-17 20:29:45 -03:00`, end: `2026-04-17 20:31:40 -03:00`, spent final: `0.5h`, spec opcional `kanban-message-banner.spec.ts` + `data-testid="kanban-notice-banner"` |
+| TASK-REQ-2026-04-17-22 | Mensagens de erro legiveis (problem+json + PT-BR, sem JSON bruto no aviso) | closed | medium | Kanban API task: `9cfce373-3492-489e-9b96-f00ca79f05a4`, start: `2026-04-17 20:35:20 -03:00`, end: `2026-04-17 20:35:42 -03:00`, spent final: `0.25h`, evidencia api |
 
 ## Transition Log
 
@@ -84,6 +86,12 @@
 | TASK-REQ-2026-04-17-20 | new -> active | 2026-04-17 20:20:33 -03:00 (LOCAL) | Solicitacao do usuario para esconder guid no card e abrir modal apenas em duplo clique (nao nos inputs) |
 | TASK-REQ-2026-04-17-20 | active -> resolved | 2026-04-17 20:25:00 -03:00 (LOCAL) | KanbanPage refatorado + Playwright spec `kanban-card-ux.spec.ts` executado com sucesso (1 passed) |
 | TASK-REQ-2026-04-17-20 | resolved -> closed | 2026-04-17 20:25:25 -03:00 (LOCAL) | Kanban task fechada com `spentHours=1.1`, 5 evidencias Playwright + auto-restart do web container |
+| TASK-REQ-2026-04-17-21 | new -> active | 2026-04-17 20:29:45 -03:00 (LOCAL) | Solicitacao do usuario para ocultar faixa vazia no Kanban e remover feedback Saving nas edicoes do card |
+| TASK-REQ-2026-04-17-21 | active -> resolved | 2026-04-17 20:31:00 -03:00 (LOCAL) | KanbanPage ajustado + Playwright `kanban-message-banner.spec.ts` com `KANBAN_UX_TASK_ID` e evidencia Step 01 |
+| TASK-REQ-2026-04-17-21 | resolved -> closed | 2026-04-17 20:31:40 -03:00 (LOCAL) | Kanban task fechada com `spentHours=0.5`, auto-restart do web container para PNG novo |
+| TASK-REQ-2026-04-17-22 | new -> active | 2026-04-17 20:35:20 -03:00 (LOCAL) | Mensagens tecnicas (JSON) no aviso; corrigir parse problem+json e copia PT-BR |
+| TASK-REQ-2026-04-17-22 | active -> resolved | 2026-04-17 20:35:35 -03:00 (LOCAL) | http.ts + mapApiMessageToPtBr + utils; evidencia api anexada |
+| TASK-REQ-2026-04-17-22 | resolved -> closed | 2026-04-17 20:35:42 -03:00 (LOCAL) | Kanban task fechada com `spentHours=0.25` |
 
 ## Baseline Done
 

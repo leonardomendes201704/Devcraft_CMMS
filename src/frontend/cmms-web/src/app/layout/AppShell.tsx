@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { clearAccessToken, getSessionUser } from '../../shared/auth/session'
 import type { CSSProperties } from 'react'
 
-type NavIcon = 'home' | 'kanban' | 'users'
+type NavIcon = 'home' | 'kanban' | 'users' | 'departments' | 'jobs'
 
 type NavItem = {
   labelKey: string
@@ -17,6 +17,8 @@ const navItems: NavItem[] = [
   { labelKey: 'shell.home', to: '/app/home', icon: 'home' },
   { labelKey: 'shell.kanban', to: '/app/kanban', icon: 'kanban' },
   { labelKey: 'shell.userAdmin', to: '/app/admin/users', icon: 'users', roles: ['admin_master'] },
+  { labelKey: 'shell.departmentAdmin', to: '/app/admin/departments', icon: 'departments', roles: ['admin_master'] },
+  { labelKey: 'shell.jobAdmin', to: '/app/admin/jobs', icon: 'jobs', roles: ['admin_master'] },
 ]
 
 export function AppShell() {
@@ -86,7 +88,7 @@ export function AppShell() {
             ))}
           </nav>
 
-          <div className="border-t border-slate-200 bg-white/95 px-3 py-3">
+          <div className="flex h-14 items-center border-t border-slate-200 bg-white/95 px-3">
             <button
               type="button"
               className="hidden w-full items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 lg:flex"
@@ -162,7 +164,7 @@ export function AppShell() {
       </div>
 
       <footer className="fixed bottom-0 left-0 right-0 z-30 border-t border-slate-200 bg-white/95 backdrop-blur lg:pl-[var(--sidebar-width)]">
-        <div className="flex w-full items-center justify-between gap-2 px-4 py-3 text-xs text-slate-600 sm:px-6">
+        <div className="flex h-14 w-full items-center justify-between gap-2 px-4 text-xs text-slate-600 sm:px-6">
           <p>{t('shell.footer')}</p>
           <p>{new Date().getFullYear()} Devcraft</p>
         </div>
@@ -195,6 +197,25 @@ function MenuIcon({ icon }: { icon: NavIcon }) {
       <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
         <rect x="3" y="4" width="18" height="16" rx="2" />
         <path d="M9 8v8M15 8v5" />
+      </svg>
+    )
+  }
+
+  if (icon === 'departments') {
+    return (
+      <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <path d="M4 20V9l8-5 8 5v11" />
+        <path d="M9 20v-6h6v6" />
+      </svg>
+    )
+  }
+
+  if (icon === 'jobs') {
+    return (
+      <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+        <rect x="3" y="7" width="18" height="13" rx="2" />
+        <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" />
+        <path d="M3 12h18" />
       </svg>
     )
   }

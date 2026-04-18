@@ -40,6 +40,7 @@
     command: sh -c "npm install && npm run dev -- --host --port 5487"
     volumes:
       - ./src/frontend/cmms-web:/app
+      - devcraft_cmms_web_node_modules:/app/node_modules
     ports:
       - "5487:5487"
     depends_on:
@@ -47,3 +48,4 @@
 
 volumes:
   devcraft_cmms_pgdata:
+  devcraft_cmms_web_node_modules:

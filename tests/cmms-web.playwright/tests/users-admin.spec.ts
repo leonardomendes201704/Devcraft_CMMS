@@ -31,9 +31,9 @@ test('user admin screen creates and updates user', async ({ page, request }, tes
   await expect(page.getByRole('heading', { name: 'Devcraft CMMS' })).toBeVisible()
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 3, 'shell home loaded after login')
 
-  await page.getByRole('link', { name: /Administracao de usuarios|User administration|User Admin/i }).click()
+  await page.getByRole('link', { name: /Usuarios|Users|User Admin/i }).click()
   await expect(page).toHaveURL(/\/app\/admin\/users$/)
-  await expect(page.getByRole('heading', { name: 'User Administration' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Users' })).toBeVisible()
   await captureAndAttachStepEvidence(request, page, testInfo, evidenceTask, 4, 'user list page opened')
 
   await page.getByRole('link', { name: 'Create user' }).click()

@@ -26,6 +26,9 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
         var users = await _dbContext.AuthUsers
             .AsNoTracking()
             .Include(x => x.Profile)
+            .ThenInclude(x => x!.DepartmentEntity)
+            .Include(x => x.Profile)
+            .ThenInclude(x => x!.JobEntity)
             .OrderBy(x => x.Email)
             .ToListAsync(cancellationToken);
 
@@ -38,6 +41,9 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
         var user = await _dbContext.AuthUsers
             .AsNoTracking()
             .Include(x => x.Profile)
+            .ThenInclude(x => x!.DepartmentEntity)
+            .Include(x => x.Profile)
+            .ThenInclude(x => x!.JobEntity)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
         if (user is null)
@@ -90,6 +96,12 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
         };
 
         user.Profile = MapProfileRequest(request.Profile, user.Id);
+        var createCatalogErrors = await ValidateAndApplyProfileCatalogAsync(user.Profile, request.Profile, cancellationToken);
+        if (createCatalogErrors.Count > 0)
+        {
+            return BadRequest(new ValidationProblemDetails(createCatalogErrors));
+        }
+
         _dbContext.AuthUsers.Add(user);
         AddAuditLog(user, "user_created", new
         {
@@ -107,6 +119,9 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
     {
         var user = await _dbContext.AuthUsers
             .Include(x => x.Profile)
+            .ThenInclude(x => x!.DepartmentEntity)
+            .Include(x => x.Profile)
+            .ThenInclude(x => x!.JobEntity)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         if (user is null)
         {
@@ -150,6 +165,11 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
             profile.TenantId = user.TenantId;
 
             MapProfileIntoEntity(profile, request.Profile, changedFields);
+            var catalogErrors = await ValidateAndApplyProfileCatalogAsync(profile, request.Profile, cancellationToken, changedFields);
+            if (catalogErrors.Count > 0)
+            {
+                return BadRequest(new ValidationProblemDetails(catalogErrors));
+            }
 
             if (user.Profile is null)
             {
@@ -209,8 +229,6 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
         ApplyChange(profile.FullName, source.FullName.Trim(), "profile.fullName", changedFields, value => profile.FullName = value);
         ApplyChange(profile.DisplayName, NormalizeOptional(source.DisplayName), "profile.displayName", changedFields, value => profile.DisplayName = value);
         ApplyChange(profile.PhoneE164, NormalizePhone(source.PhoneE164), "profile.phoneE164", changedFields, value => profile.PhoneE164 = value);
-        ApplyChange(profile.JobTitle, NormalizeOptional(source.JobTitle), "profile.jobTitle", changedFields, value => profile.JobTitle = value);
-        ApplyChange(profile.Department, NormalizeOptional(source.Department), "profile.department", changedFields, value => profile.Department = value);
         ApplyChange(profile.EmployeeCode, NormalizeOptional(source.EmployeeCode), "profile.employeeCode", changedFields, value => profile.EmployeeCode = value);
         ApplyChange(profile.ManagerAuthUserId, source.ManagerAuthUserId, "profile.managerAuthUserId", changedFields, value => profile.ManagerAuthUserId = value);
         ApplyChange(profile.TimeZone, NormalizeOptional(source.TimeZone), "profile.timeZone", changedFields, value => profile.TimeZone = value);
@@ -221,6 +239,69 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
         ApplyChange(profile.BirthDate, source.BirthDate, "profile.birthDate", changedFields, value => profile.BirthDate = value);
         ApplyChange(profile.HireDate, source.HireDate, "profile.hireDate", changedFields, value => profile.HireDate = value);
         ApplyChange(profile.MetadataJson, NormalizeMetadataJson(source.MetadataJson), "profile.metadataJson", changedFields, value => profile.MetadataJson = value);
+    }
+
+    private async Task<Dictionary<string, string[]>> ValidateAndApplyProfileCatalogAsync(
+        AuthUserProfile profile,
+        UserProfileInputRequest source,
+        CancellationToken cancellationToken,
+        IDictionary<string, object?>? changedFields = null)
+    {
+        var errors = new Dictionary<string, string[]>();
+        var changes = changedFields ?? new Dictionary<string, object?>();
+
+        AuthDepartment? department = null;
+        AuthJob? job = null;
+
+        if (source.DepartmentId.HasValue)
+        {
+            department = await _dbContext.AuthDepartments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == source.DepartmentId.Value, cancellationToken);
+
+            if (department is null)
+            {
+                errors[$"{nameof(source)}.departmentId"] = ["Department was not found."];
+            }
+        }
+
+        if (source.JobId.HasValue)
+        {
+            job = await _dbContext.AuthJobs
+                .AsNoTracking()
+                .Include(x => x.Department)
+                .FirstOrDefaultAsync(x => x.Id == source.JobId.Value, cancellationToken);
+
+            if (job is null)
+            {
+                errors[$"{nameof(source)}.jobId"] = ["Job was not found."];
+            }
+        }
+
+        if (job is not null && department is not null && job.DepartmentId != department.Id)
+        {
+            errors[$"{nameof(source)}.jobId"] = ["Job does not belong to provided department."];
+        }
+
+        if (errors.Count > 0)
+        {
+            return errors;
+        }
+
+        if (department is null && job is not null)
+        {
+            department = job.Department;
+        }
+
+        var requestedDepartmentName = NormalizeOptional(source.Department);
+        var requestedJobTitle = NormalizeOptional(source.JobTitle);
+
+        ApplyChange(profile.DepartmentId, department?.Id, "profile.departmentId", changes, value => profile.DepartmentId = value);
+        ApplyChange(profile.JobId, job?.Id, "profile.jobId", changes, value => profile.JobId = value);
+        ApplyChange(profile.Department, department?.Name ?? requestedDepartmentName, "profile.department", changes, value => profile.Department = value);
+        ApplyChange(profile.JobTitle, job?.Name ?? requestedJobTitle, "profile.jobTitle", changes, value => profile.JobTitle = value);
+
+        return errors;
     }
 
     private void AddAuditLog(AuthUser user, string eventType, object payload)
@@ -367,6 +448,8 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
             profile.FullName,
             profile.DisplayName,
             profile.PhoneE164,
+            profile.DepartmentId,
+            profile.JobId,
             profile.JobTitle,
             profile.Department,
             profile.EmployeeCode,
@@ -393,8 +476,12 @@ public sealed class UsersController(AppDbContext dbContext) : ControllerBase
                     profile.FullName,
                     profile.DisplayName,
                     maskSensitiveData ? MaskPhone(profile.PhoneE164) : profile.PhoneE164,
+                    profile.DepartmentId,
+                    profile.JobId,
                     profile.JobTitle,
                     profile.Department,
+                    profile.DepartmentEntity?.Name ?? profile.Department,
+                    profile.JobEntity?.Name ?? profile.JobTitle,
                     profile.EmployeeCode,
                     profile.ManagerAuthUserId,
                     profile.TimeZone,
@@ -462,6 +549,10 @@ public sealed class UserProfileInputRequest
     [MaxLength(128)]
     public string? Department { get; init; }
 
+    public Guid? DepartmentId { get; init; }
+
+    public Guid? JobId { get; init; }
+
     [MaxLength(64)]
     public string? EmployeeCode { get; init; }
 
@@ -500,8 +591,12 @@ public sealed record AuthUserProfileResponse(
     string FullName,
     string? DisplayName,
     string? PhoneE164,
+    Guid? DepartmentId,
+    Guid? JobId,
     string? JobTitle,
     string? Department,
+    string? DepartmentName,
+    string? JobName,
     string? EmployeeCode,
     Guid? ManagerAuthUserId,
     string? TimeZone,

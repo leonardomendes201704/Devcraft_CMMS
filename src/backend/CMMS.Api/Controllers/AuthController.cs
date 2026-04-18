@@ -126,6 +126,8 @@ public sealed class AuthController(IConfiguration configuration, AppDbContext db
             });
         }
 
+        await EnsureTenantCatalogSeedAsync(tenantId, cancellationToken);
+
         user.LastLoginAtUtc = DateTime.UtcNow;
         user.AccessFailedCount = 0;
         user.LockoutEndUtc = null;
@@ -170,6 +172,47 @@ public sealed class AuthController(IConfiguration configuration, AppDbContext db
             "Bearer",
             expiresUtc,
             new LoginUserResponse(user.Email, user.Role, tenantId)));
+    }
+
+    private async Task EnsureTenantCatalogSeedAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var hasDepartments = await _dbContext.AuthDepartments.AnyAsync(cancellationToken);
+        if (hasDepartments)
+        {
+            return;
+        }
+
+        var utcNow = DateTime.UtcNow;
+        var departments = new[]
+        {
+            new AuthDepartment { Id = Guid.NewGuid(), TenantId = tenantId, Name = "Maintenance", Code = "MAINT", Description = "Maintenance operations and planning", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthDepartment { Id = Guid.NewGuid(), TenantId = tenantId, Name = "Operations", Code = "OPS", Description = "Production operations and reliability", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthDepartment { Id = Guid.NewGuid(), TenantId = tenantId, Name = "Quality", Code = "QUAL", Description = "Quality assurance and compliance", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthDepartment { Id = Guid.NewGuid(), TenantId = tenantId, Name = "Safety", Code = "HSE", Description = "Safety and environmental governance", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthDepartment { Id = Guid.NewGuid(), TenantId = tenantId, Name = "Facilities", Code = "FAC", Description = "Building and utilities management", IsActive = true, CreatedAtUtc = utcNow }
+        };
+
+        var jobs = new[]
+        {
+            new AuthJob { Id = Guid.NewGuid(), TenantId = tenantId, DepartmentId = departments[0].Id, Name = "Maintenance Technician", Code = "TECH_MAINT", Description = "Executes preventive and corrective maintenance", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthJob { Id = Guid.NewGuid(), TenantId = tenantId, DepartmentId = departments[0].Id, Name = "Maintenance Supervisor", Code = "SUP_MAINT", Description = "Coordinates maintenance teams and priorities", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthJob { Id = Guid.NewGuid(), TenantId = tenantId, DepartmentId = departments[1].Id, Name = "Operations Analyst", Code = "ANL_OPS", Description = "Monitors performance and operational KPIs", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthJob { Id = Guid.NewGuid(), TenantId = tenantId, DepartmentId = departments[2].Id, Name = "Quality Inspector", Code = "INSP_QUAL", Description = "Performs audits and quality checks", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthJob { Id = Guid.NewGuid(), TenantId = tenantId, DepartmentId = departments[3].Id, Name = "Safety Engineer", Code = "ENG_HSE", Description = "Leads risk assessment and safety controls", IsActive = true, CreatedAtUtc = utcNow },
+            new AuthJob { Id = Guid.NewGuid(), TenantId = tenantId, DepartmentId = departments[4].Id, Name = "Facilities Coordinator", Code = "COORD_FAC", Description = "Coordinates assets and facility routines", IsActive = true, CreatedAtUtc = utcNow }
+        };
+
+        _dbContext.AuthDepartments.AddRange(departments);
+        _dbContext.AuthJobs.AddRange(jobs);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // Concurrent first-login requests can race on unique code indexes.
+        }
     }
 }
 

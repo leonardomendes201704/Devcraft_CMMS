@@ -10,6 +10,8 @@ export type UserFormValues = {
   fullName: string
   displayName: string
   phoneE164: string
+  departmentId: string
+  jobId: string
   jobTitle: string
   department: string
   employeeCode: string
@@ -29,11 +31,23 @@ type UserFormProps = {
   isSubmitting: boolean
   disableEmail?: boolean
   submitLabel: string
+  departmentOptions: Array<{ id: string; name: string }>
+  jobOptions: Array<{ id: string; name: string; departmentId: string }>
   onChange: (next: UserFormValues) => void
   onSubmit: () => void
 }
 
-export function UserForm({ mode, values, isSubmitting, disableEmail, submitLabel, onChange, onSubmit }: UserFormProps) {
+export function UserForm({
+  mode,
+  values,
+  isSubmitting,
+  disableEmail,
+  submitLabel,
+  departmentOptions,
+  jobOptions,
+  onChange,
+  onSubmit,
+}: UserFormProps) {
   function submit(event: FormEvent) {
     event.preventDefault()
     onSubmit()
@@ -131,26 +145,67 @@ export function UserForm({ mode, values, isSubmitting, disableEmail, submitLabel
       </label>
 
       <label className="grid gap-1 text-sm">
-        <span>Job title</span>
+        <span>Department</span>
+        <select
+          className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm"
+          aria-label="User department"
+          value={values.departmentId}
+          onChange={(event) => {
+            const nextDepartmentId = event.target.value
+            const currentJob = jobOptions.find((option) => option.id === values.jobId)
+            const nextJobId = currentJob && currentJob.departmentId === nextDepartmentId ? values.jobId : ''
+            onChange({ ...values, departmentId: nextDepartmentId, jobId: nextJobId })
+          }}
+        >
+          <option value="">Select department</option>
+          {departmentOptions.map((department) => (
+            <option key={department.id} value={department.id}>
+              {department.name}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        <span>Job</span>
+        <select
+          className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm"
+          aria-label="User job"
+          value={values.jobId}
+          onChange={(event) => onChange({ ...values, jobId: event.target.value })}
+        >
+          <option value="">Select job</option>
+          {jobOptions
+            .filter((job) => !values.departmentId || job.departmentId === values.departmentId)
+            .map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.name}
+              </option>
+            ))}
+        </select>
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        <span>Legacy job title (optional)</span>
         <input
           className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm"
           type="text"
-          aria-label="User job title"
+          aria-label="User legacy job title"
           value={values.jobTitle}
           onChange={(event) => onChange({ ...values, jobTitle: event.target.value })}
-          placeholder="Maintenance Engineer"
+          placeholder="Fallback free text"
         />
       </label>
 
       <label className="grid gap-1 text-sm">
-        <span>Department</span>
+        <span>Legacy department (optional)</span>
         <input
           className="rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm"
           type="text"
-          aria-label="User department"
+          aria-label="User legacy department"
           value={values.department}
           onChange={(event) => onChange({ ...values, department: event.target.value })}
-          placeholder="Operations"
+          placeholder="Fallback free text"
         />
       </label>
 

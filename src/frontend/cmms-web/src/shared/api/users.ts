@@ -7,8 +7,12 @@ export type AuthUserProfile = {
   fullName: string
   displayName: string | null
   phoneE164: string | null
+  departmentId: string | null
+  jobId: string | null
   jobTitle: string | null
   department: string | null
+  departmentName: string | null
+  jobName: string | null
   employeeCode: string | null
   managerAuthUserId: string | null
   timeZone: string | null
@@ -36,6 +40,8 @@ export type UserProfilePayload = {
   fullName: string
   displayName?: string | null
   phoneE164?: string | null
+  departmentId?: string | null
+  jobId?: string | null
   jobTitle?: string | null
   department?: string | null
   employeeCode?: string | null

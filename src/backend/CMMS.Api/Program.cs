@@ -139,246 +139,252 @@ app.Run();
 static async Task EnsureAuthSchemaAsync(AppDbContext dbContext)
 {
     var providerName = dbContext.Database.ProviderName ?? string.Empty;
-
-    if (providerName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    if (!providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
     {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS auth_users (
-              "Id" TEXT NOT NULL CONSTRAINT "PK_auth_users" PRIMARY KEY,
-              "TenantId" TEXT NOT NULL,
-              "Email" TEXT NOT NULL,
-              "PasswordHash" TEXT NOT NULL,
-              "Role" TEXT NOT NULL,
-              "IsActive" INTEGER NOT NULL,
-              "LastLoginAtUtc" TEXT NULL,
-              "AccessFailedCount" INTEGER NOT NULL DEFAULT 0,
-              "LockoutEndUtc" TEXT NULL,
-              "CreatedAtUtc" TEXT NOT NULL,
-              "UpdatedAtUtc" TEXT NULL
-            );
-            """);
-        try { await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE auth_users ADD COLUMN LastLoginAtUtc TEXT NULL;"); } catch { }
-        try { await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE auth_users ADD COLUMN AccessFailedCount INTEGER NOT NULL DEFAULT 0;"); } catch { }
-        try { await dbContext.Database.ExecuteSqlRawAsync("ALTER TABLE auth_users ADD COLUMN LockoutEndUtc TEXT NULL;"); } catch { }
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS IX_auth_users_tenant_email
-            ON auth_users ("TenantId","Email");
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS auth_user_profiles (
-              "Id" TEXT NOT NULL CONSTRAINT "PK_auth_user_profiles" PRIMARY KEY,
-              "TenantId" TEXT NOT NULL,
-              "AuthUserId" TEXT NOT NULL,
-              "FullName" TEXT NOT NULL,
-              "DisplayName" TEXT NULL,
-              "PhoneE164" TEXT NULL,
-              "JobTitle" TEXT NULL,
-              "Department" TEXT NULL,
-              "EmployeeCode" TEXT NULL,
-              "ManagerAuthUserId" TEXT NULL,
-              "TimeZone" TEXT NULL,
-              "Locale" TEXT NULL,
-              "AvatarUrl" TEXT NULL,
-              "EmergencyContactName" TEXT NULL,
-              "EmergencyContactPhoneE164" TEXT NULL,
-              "BirthDate" TEXT NULL,
-              "HireDate" TEXT NULL,
-              "MetadataJson" TEXT NOT NULL DEFAULT '{{}}',
-              "CreatedAtUtc" TEXT NOT NULL,
-              "UpdatedAtUtc" TEXT NULL
-            );
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS IX_auth_user_profiles_tenant_auth_user
-            ON auth_user_profiles ("TenantId","AuthUserId");
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE INDEX IF NOT EXISTS IX_auth_user_profiles_tenant_employee_code
-            ON auth_user_profiles ("TenantId","EmployeeCode");
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS auth_user_audit_logs (
-              "Id" TEXT NOT NULL CONSTRAINT "PK_auth_user_audit_logs" PRIMARY KEY,
-              "TenantId" TEXT NOT NULL,
-              "AuthUserId" TEXT NOT NULL,
-              "EventType" TEXT NOT NULL,
-              "ChangedBy" TEXT NULL,
-              "ChangedFieldsJson" TEXT NULL,
-              "CreatedAtUtc" TEXT NOT NULL,
-              "UpdatedAtUtc" TEXT NULL
-            );
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE INDEX IF NOT EXISTS IX_auth_user_audit_logs_tenant_user_created
-            ON auth_user_audit_logs ("TenantId","AuthUserId","CreatedAtUtc");
-            """);
-        return;
+        throw new InvalidOperationException($"Unsupported database provider '{providerName}'. Only PostgreSQL is supported.");
     }
 
-    if (providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
-    {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS auth_users (
-              "Id" uuid NOT NULL PRIMARY KEY,
-              "TenantId" uuid NOT NULL,
-              "Email" character varying(256) NOT NULL,
-              "PasswordHash" character varying(512) NOT NULL,
-              "Role" character varying(64) NOT NULL,
-              "IsActive" boolean NOT NULL,
-              "LastLoginAtUtc" timestamp with time zone NULL,
-              "AccessFailedCount" integer NOT NULL DEFAULT 0,
-              "LockoutEndUtc" timestamp with time zone NULL,
-              "CreatedAtUtc" timestamp with time zone NOT NULL,
-              "UpdatedAtUtc" timestamp with time zone NULL
-            );
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS \"LastLoginAtUtc\" timestamp with time zone NULL;");
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS \"AccessFailedCount\" integer NOT NULL DEFAULT 0;");
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS \"LockoutEndUtc\" timestamp with time zone NULL;");
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS "IX_auth_users_tenant_email"
-            ON auth_users ("TenantId","Email");
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS auth_user_profiles (
-              "Id" uuid NOT NULL PRIMARY KEY,
-              "TenantId" uuid NOT NULL,
-              "AuthUserId" uuid NOT NULL,
-              "FullName" character varying(256) NOT NULL,
-              "DisplayName" character varying(256) NULL,
-              "PhoneE164" character varying(32) NULL,
-              "JobTitle" character varying(128) NULL,
-              "Department" character varying(128) NULL,
-              "EmployeeCode" character varying(64) NULL,
-              "ManagerAuthUserId" uuid NULL,
-              "TimeZone" character varying(64) NULL,
-              "Locale" character varying(16) NULL,
-              "AvatarUrl" character varying(2048) NULL,
-              "EmergencyContactName" character varying(256) NULL,
-              "EmergencyContactPhoneE164" character varying(32) NULL,
-              "BirthDate" timestamp with time zone NULL,
-              "HireDate" timestamp with time zone NULL,
-              "MetadataJson" text NOT NULL DEFAULT '{{}}',
-              "CreatedAtUtc" timestamp with time zone NOT NULL,
-              "UpdatedAtUtc" timestamp with time zone NULL
-            );
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS "IX_auth_user_profiles_tenant_auth_user"
-            ON auth_user_profiles ("TenantId","AuthUserId");
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE INDEX IF NOT EXISTS "IX_auth_user_profiles_tenant_employee_code"
-            ON auth_user_profiles ("TenantId","EmployeeCode");
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS auth_user_audit_logs (
-              "Id" uuid NOT NULL PRIMARY KEY,
-              "TenantId" uuid NOT NULL,
-              "AuthUserId" uuid NOT NULL,
-              "EventType" character varying(64) NOT NULL,
-              "ChangedBy" character varying(256) NULL,
-              "ChangedFieldsJson" text NULL,
-              "CreatedAtUtc" timestamp with time zone NOT NULL,
-              "UpdatedAtUtc" timestamp with time zone NULL
-            );
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE INDEX IF NOT EXISTS "IX_auth_user_audit_logs_tenant_user_created"
-            ON auth_user_audit_logs ("TenantId","AuthUserId","CreatedAtUtc");
-            """);
-    }
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS auth_users (
+          "Id" uuid NOT NULL PRIMARY KEY,
+          "TenantId" uuid NOT NULL,
+          "Email" character varying(256) NOT NULL,
+          "PasswordHash" character varying(512) NOT NULL,
+          "Role" character varying(64) NOT NULL,
+          "IsActive" boolean NOT NULL,
+          "LastLoginAtUtc" timestamp with time zone NULL,
+          "AccessFailedCount" integer NOT NULL DEFAULT 0,
+          "LockoutEndUtc" timestamp with time zone NULL,
+          "CreatedAtUtc" timestamp with time zone NOT NULL,
+          "UpdatedAtUtc" timestamp with time zone NULL
+        );
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS \"LastLoginAtUtc\" timestamp with time zone NULL;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS \"AccessFailedCount\" integer NOT NULL DEFAULT 0;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE auth_users ADD COLUMN IF NOT EXISTS \"LockoutEndUtc\" timestamp with time zone NULL;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_auth_users_tenant_email"
+        ON auth_users ("TenantId","Email");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS auth_user_profiles (
+          "Id" uuid NOT NULL PRIMARY KEY,
+          "TenantId" uuid NOT NULL,
+          "AuthUserId" uuid NOT NULL,
+          "FullName" character varying(256) NOT NULL,
+          "DisplayName" character varying(256) NULL,
+          "PhoneE164" character varying(32) NULL,
+          "DepartmentId" uuid NULL,
+          "JobId" uuid NULL,
+          "JobTitle" character varying(128) NULL,
+          "Department" character varying(128) NULL,
+          "EmployeeCode" character varying(64) NULL,
+          "ManagerAuthUserId" uuid NULL,
+          "TimeZone" character varying(64) NULL,
+          "Locale" character varying(16) NULL,
+          "AvatarUrl" character varying(2048) NULL,
+          "EmergencyContactName" character varying(256) NULL,
+          "EmergencyContactPhoneE164" character varying(32) NULL,
+          "BirthDate" timestamp with time zone NULL,
+          "HireDate" timestamp with time zone NULL,
+          "MetadataJson" text NOT NULL DEFAULT '{{}}',
+          "CreatedAtUtc" timestamp with time zone NOT NULL,
+          "UpdatedAtUtc" timestamp with time zone NULL
+        );
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_auth_user_profiles_tenant_auth_user"
+        ON auth_user_profiles ("TenantId","AuthUserId");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE auth_user_profiles ADD COLUMN IF NOT EXISTS \"DepartmentId\" uuid NULL;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE auth_user_profiles ADD COLUMN IF NOT EXISTS \"JobId\" uuid NULL;");
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS auth_departments (
+          "Id" uuid NOT NULL PRIMARY KEY,
+          "TenantId" uuid NOT NULL,
+          "Name" character varying(128) NOT NULL,
+          "Code" character varying(32) NOT NULL,
+          "Description" character varying(512) NULL,
+          "IsActive" boolean NOT NULL DEFAULT TRUE,
+          "CreatedAtUtc" timestamp with time zone NOT NULL,
+          "UpdatedAtUtc" timestamp with time zone NULL
+        );
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_auth_departments_tenant_code"
+        ON auth_departments ("TenantId","Code");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE INDEX IF NOT EXISTS "IX_auth_departments_tenant_name"
+        ON auth_departments ("TenantId","Name");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS auth_jobs (
+          "Id" uuid NOT NULL PRIMARY KEY,
+          "TenantId" uuid NOT NULL,
+          "DepartmentId" uuid NOT NULL,
+          "Name" character varying(128) NOT NULL,
+          "Code" character varying(32) NOT NULL,
+          "Description" character varying(512) NULL,
+          "IsActive" boolean NOT NULL DEFAULT TRUE,
+          "CreatedAtUtc" timestamp with time zone NOT NULL,
+          "UpdatedAtUtc" timestamp with time zone NULL
+        );
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_auth_jobs_tenant_code"
+        ON auth_jobs ("TenantId","Code");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE INDEX IF NOT EXISTS "IX_auth_jobs_tenant_department"
+        ON auth_jobs ("TenantId","DepartmentId");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE INDEX IF NOT EXISTS "IX_auth_jobs_tenant_name"
+        ON auth_jobs ("TenantId","Name");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.table_constraints
+            WHERE constraint_name = 'FK_auth_jobs_auth_departments_DepartmentId'
+              AND table_name = 'auth_jobs'
+          ) THEN
+            ALTER TABLE auth_jobs
+            ADD CONSTRAINT "FK_auth_jobs_auth_departments_DepartmentId"
+            FOREIGN KEY ("DepartmentId")
+            REFERENCES auth_departments ("Id")
+            ON DELETE RESTRICT;
+          END IF;
+        END$$;
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.table_constraints
+            WHERE constraint_name = 'FK_auth_user_profiles_auth_departments_DepartmentId'
+              AND table_name = 'auth_user_profiles'
+          ) THEN
+            ALTER TABLE auth_user_profiles
+            ADD CONSTRAINT "FK_auth_user_profiles_auth_departments_DepartmentId"
+            FOREIGN KEY ("DepartmentId")
+            REFERENCES auth_departments ("Id")
+            ON DELETE SET NULL;
+          END IF;
+        END$$;
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1
+            FROM information_schema.table_constraints
+            WHERE constraint_name = 'FK_auth_user_profiles_auth_jobs_JobId'
+              AND table_name = 'auth_user_profiles'
+          ) THEN
+            ALTER TABLE auth_user_profiles
+            ADD CONSTRAINT "FK_auth_user_profiles_auth_jobs_JobId"
+            FOREIGN KEY ("JobId")
+            REFERENCES auth_jobs ("Id")
+            ON DELETE SET NULL;
+          END IF;
+        END$$;
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE INDEX IF NOT EXISTS "IX_auth_user_profiles_tenant_department"
+        ON auth_user_profiles ("TenantId","DepartmentId");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE INDEX IF NOT EXISTS "IX_auth_user_profiles_tenant_job"
+        ON auth_user_profiles ("TenantId","JobId");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE INDEX IF NOT EXISTS "IX_auth_user_profiles_tenant_employee_code"
+        ON auth_user_profiles ("TenantId","EmployeeCode");
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS auth_user_audit_logs (
+          "Id" uuid NOT NULL PRIMARY KEY,
+          "TenantId" uuid NOT NULL,
+          "AuthUserId" uuid NOT NULL,
+          "EventType" character varying(64) NOT NULL,
+          "ChangedBy" character varying(256) NULL,
+          "ChangedFieldsJson" text NULL,
+          "CreatedAtUtc" timestamp with time zone NOT NULL,
+          "UpdatedAtUtc" timestamp with time zone NULL
+        );
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE INDEX IF NOT EXISTS "IX_auth_user_audit_logs_tenant_user_created"
+        ON auth_user_audit_logs ("TenantId","AuthUserId","CreatedAtUtc");
+        """);
 }
 
 static async Task EnsureKanbanEvidenceSchemaAsync(AppDbContext dbContext)
 {
     var providerName = dbContext.Database.ProviderName ?? string.Empty;
-
-    if (providerName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    if (!providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
     {
-        try
-        {
-            await dbContext.Database.ExecuteSqlRawAsync(
-                "ALTER TABLE kanban_tasks ADD COLUMN EvidenceJson TEXT NOT NULL DEFAULT '[]';");
-        }
-        catch
-        {
-            // Column may already exist on dev databases.
-        }
-
-        return;
+        throw new InvalidOperationException($"Unsupported database provider '{providerName}'. Only PostgreSQL is supported.");
     }
 
-    if (providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
-    {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            "ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS \"EvidenceJson\" text NOT NULL DEFAULT '[]';");
-    }
+    await dbContext.Database.ExecuteSqlRawAsync(
+        "ALTER TABLE kanban_tasks ADD COLUMN IF NOT EXISTS \"EvidenceJson\" text NOT NULL DEFAULT '[]';");
 }
 
 static async Task EnsureProjectChangelogSchemaAsync(AppDbContext dbContext)
 {
     var providerName = dbContext.Database.ProviderName ?? string.Empty;
-
-    if (providerName.Contains("Sqlite", StringComparison.OrdinalIgnoreCase))
+    if (!providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
     {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS project_changelog_entries (
-              "Id" TEXT NOT NULL CONSTRAINT "PK_project_changelog_entries" PRIMARY KEY,
-              "Version" TEXT NOT NULL,
-              "ReleaseDateUtc" TEXT NOT NULL,
-              "Category" TEXT NOT NULL,
-              "Description" TEXT NOT NULL,
-              "Source" TEXT NOT NULL,
-              "CreatedAtUtc" TEXT NOT NULL
-            );
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS IX_project_changelog_entries_unique
-            ON project_changelog_entries ("Version","ReleaseDateUtc","Category","Description");
-            """);
-        return;
+        throw new InvalidOperationException($"Unsupported database provider '{providerName}'. Only PostgreSQL is supported.");
     }
 
-    if (providerName.Contains("Npgsql", StringComparison.OrdinalIgnoreCase))
-    {
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE TABLE IF NOT EXISTS project_changelog_entries (
-              "Id" uuid NOT NULL PRIMARY KEY,
-              "Version" character varying(64) NOT NULL,
-              "ReleaseDateUtc" timestamp with time zone NOT NULL,
-              "Category" character varying(128) NOT NULL,
-              "Description" character varying(4000) NOT NULL,
-              "Source" character varying(32) NOT NULL,
-              "CreatedAtUtc" timestamp with time zone NOT NULL
-            );
-            """);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """
-            CREATE UNIQUE INDEX IF NOT EXISTS "IX_project_changelog_entries_unique"
-            ON project_changelog_entries ("Version","ReleaseDateUtc","Category","Description");
-            """);
-    }
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE TABLE IF NOT EXISTS project_changelog_entries (
+          "Id" uuid NOT NULL PRIMARY KEY,
+          "Version" character varying(64) NOT NULL,
+          "ReleaseDateUtc" timestamp with time zone NOT NULL,
+          "Category" character varying(128) NOT NULL,
+          "Description" character varying(4000) NOT NULL,
+          "Source" character varying(32) NOT NULL,
+          "CreatedAtUtc" timestamp with time zone NOT NULL
+        );
+        """);
+    await dbContext.Database.ExecuteSqlRawAsync(
+        """
+        CREATE UNIQUE INDEX IF NOT EXISTS "IX_project_changelog_entries_unique"
+        ON project_changelog_entries ("Version","ReleaseDateUtc","Category","Description");
+        """);
 }
 
 static async Task SyncProjectChangelogFromFileAsync(AppDbContext dbContext, string contentRootPath)

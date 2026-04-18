@@ -8,6 +8,8 @@ public sealed class AuthUserProfile : AuditableTenantEntity
     public string FullName { get; set; } = string.Empty;
     public string? DisplayName { get; set; }
     public string? PhoneE164 { get; set; }
+    public Guid? DepartmentId { get; set; }
+    public Guid? JobId { get; set; }
     public string? JobTitle { get; set; }
     public string? Department { get; set; }
     public string? EmployeeCode { get; set; }
@@ -22,4 +24,6 @@ public sealed class AuthUserProfile : AuditableTenantEntity
     public string MetadataJson { get; set; } = "{}";
 
     public AuthUser AuthUser { get; set; } = null!;
+    public AuthDepartment? DepartmentEntity { get; set; }
+    public AuthJob? JobEntity { get; set; }
 }
