@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.27-playwright-orphan-tasks-batch] - 2026-04-18
+
+### Added
+- Sete evidencias em `public/evidences/` para fechamento retroativo de tasks Kanban criadas por fluxos Playwright e presas em `new` (Validacao E2E Kanban + Playwright user admin / kanban step evidence).
+
+Tasks: `24f8641a-f52d-4ee2-9070-26bd165a1242`, `5650c16e-c6aa-497a-8ed7-3349b1ecf342`, `450f0bf0-4bca-4547-ad87-f7e133449e0c`, `2f01bcff-e8dc-4351-8878-a9b357ce7338`, `5f5931d4-bb35-4ff6-9bd8-eb17bed9a7de`, `8dce3271-c007-4eb5-8f0b-2e71d6c50cf1`, `52c16936-48ce-43a8-88e3-da9ee6040a06`; spent final `0.1h` cada.
+
 ## [0.1.26-playwright-kanban-e2e-task-cleanup] - 2026-04-18
 
 ### Added
