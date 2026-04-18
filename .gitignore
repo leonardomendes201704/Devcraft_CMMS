@@ -23,3 +23,5 @@ Thumbs.db
 
 # Playwright (artefatos regeneraveis localmente)
 tests/cmms-web.playwright/test-results/
+tests/cmms-web.playwright/evidence-output/*
+!tests/cmms-web.playwright/evidence-output/.gitkeep

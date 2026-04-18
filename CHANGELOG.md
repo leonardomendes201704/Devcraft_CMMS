@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.35-regression-users-depts-jobs] - 2026-04-18
+
+### Added
+- `tests/cmms-web.playwright/tests/api-regression-users-departments-jobs.spec.ts`: regressao **API** para departamentos, cargos e usuarios (list/create/get/patch, conflitos 409 em codigo duplicado); artefatos JSON em `tests/cmms-web.playwright/evidence-output/api/` (gitignored, via `writeApiRegressionArtifact`).
+- `guidelines/workflows/regression-testing.md`: diretriz de regressao, pastas de evidencia e comandos Playwright.
+- `tests/cmms-web.playwright/evidence-output/.gitkeep`: pasta reservada para artefatos de API.
+
+### Changed
+- `tests/cmms-web.playwright/tests/support/evidence.ts`: opcao `segment` em `captureAndAttachStepEvidence` — PNGs em `public/evidences/regression/<segment>/`; funcao `writeApiRegressionArtifact`.
+- `org-catalog-admin.spec.ts`: edicao de departamento e cargo apos criacao; 10 passos de evidencia; segmento `org-catalog`.
+- `users-admin.spec.ts`: segmento `users-admin` nas evidencias.
+- `guidelines/README.md`: referencia a `regression-testing.md`.
+- `.gitignore`: ignorar conteudo de `evidence-output/` exceto `.gitkeep`.
+
 ## [0.1.34-kanban-delete-isolation-cleanup] - 2026-04-18
 
 ### Added

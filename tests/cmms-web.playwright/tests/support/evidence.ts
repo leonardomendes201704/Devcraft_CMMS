@@ -70,6 +70,16 @@ export async function createFrontendEvidenceTask(
   }
 }
 
+/** Segmento opcional: arquivos em `public/evidences/regression/<segment>/` para organizar evidencias por suite. */
+export type StepEvidenceOptions = {
+  segment?: string
+}
+
+function sanitizeEvidenceSegment(segment: string): string {
+  const trimmed = segment.trim().replace(/^[/\\]+|[/\\]+$/g, '')
+  return trimmed.replace(/[^a-zA-Z0-9/_-]/g, '').replace(/\/+/g, '/').slice(0, 120)
+}
+
 export async function captureAndAttachStepEvidence(
   request: APIRequestContext,
   page: Page,
@@ -77,6 +87,7 @@ export async function captureAndAttachStepEvidence(
   context: EvidenceTaskContext,
   stepNumber: number,
   stepName: string,
+  options?: StepEvidenceOptions,
 ): Promise<void> {
   const normalizedStep = String(stepNumber).padStart(2, '0')
   const stepSlug = slugify(stepName)
@@ -84,9 +95,15 @@ export async function captureAndAttachStepEvidence(
   await page.screenshot({ path: screenshotPath, fullPage: true })
 
   const evidenceFileName = `task-${context.taskId}-pw-step-${normalizedStep}-${stepSlug}-${Date.now()}.png`
-  const evidenceDirectory = path.resolve(testInfo.config.rootDir, '../../../src/frontend/cmms-web/public/evidences')
+  const publicEvidencesRoot = path.resolve(testInfo.config.rootDir, '../../../src/frontend/cmms-web/public/evidences')
+  const safeSeg = options?.segment ? sanitizeEvidenceSegment(options.segment) : ''
+  const relativeUnderPublic = safeSeg ? path.join('regression', safeSeg) : ''
+  const evidenceDirectory = relativeUnderPublic ? path.join(publicEvidencesRoot, relativeUnderPublic) : publicEvidencesRoot
   const evidenceAbsolutePath = path.join(evidenceDirectory, evidenceFileName)
-  const evidencePublicUrl = `/evidences/${evidenceFileName}`
+  const urlSubPath = relativeUnderPublic
+    ? `${relativeUnderPublic.replace(/\\/g, '/')}/${evidenceFileName}`
+    : evidenceFileName
+  const evidencePublicUrl = `/evidences/${urlSubPath}`
 
   await fs.mkdir(evidenceDirectory, { recursive: true })
   await fs.copyFile(screenshotPath, evidenceAbsolutePath)
@@ -144,6 +161,17 @@ export async function getTaskById(request: APIRequestContext, context: AuthConte
   const task = tasks.find((item) => item.id === taskId)
   expect(task).toBeDefined()
   return task!
+}
+
+/** Grava JSON de regressao API em `tests/cmms-web.playwright/evidence-output/api/` (gitignored). */
+export async function writeApiRegressionArtifact(testInfo: TestInfo, baseName: string, payload: unknown): Promise<string> {
+  const projectDir = path.resolve(testInfo.config.rootDir, '..')
+  const dir = path.join(projectDir, 'evidence-output', 'api')
+  await fs.mkdir(dir, { recursive: true })
+  const safe = baseName.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80)
+  const filePath = path.join(dir, `${safe}-${Date.now()}.json`)
+  await fs.writeFile(filePath, JSON.stringify(payload, null, 2), 'utf-8')
+  return filePath
 }
 
 function slugify(value: string): string {

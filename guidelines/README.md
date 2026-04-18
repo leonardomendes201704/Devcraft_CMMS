@@ -16,7 +16,7 @@ Central index of engineering rules by context.
 - lessons-learned
 - commands
 - troubleshooting
-- workflows
+- workflows (regressao Playwright: `workflows/regression-testing.md`)
 
 ## How To Use
 
