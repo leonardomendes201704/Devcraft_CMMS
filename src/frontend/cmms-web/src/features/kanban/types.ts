@@ -13,6 +13,8 @@ export interface KanbanTask {
   spentHours: number
   status: TaskStatus
   createdAtUtc: string
+  /** Ultima persistencia no servidor (status, effort, evidencias, etc.) */
+  updatedAtUtc: string | null
   closedAtUtc: string | null
   totalSpentHoursOnClose: number | null
   totalLeadTimeHoursOnClose: number | null

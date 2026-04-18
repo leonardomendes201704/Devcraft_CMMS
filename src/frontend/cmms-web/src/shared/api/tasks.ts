@@ -22,6 +22,7 @@ type ApiKanbanTask = {
   spentHours: number
   status: TaskStatus
   createdAtUtc: string
+  updatedAtUtc?: string | null
   closedAtUtc: string | null
   totalSpentHoursOnClose: number | null
   totalLeadTimeHoursOnClose: number | null
@@ -101,6 +102,7 @@ function toKanbanTask(task: ApiKanbanTask): KanbanTask {
     ...task,
     description: task.description ?? '',
     assignee: task.assignee ?? 'Unassigned',
+    updatedAtUtc: task.updatedAtUtc ?? null,
     closedAtUtc: task.closedAtUtc ?? null,
     totalSpentHoursOnClose: task.totalSpentHoursOnClose ?? null,
     totalLeadTimeHoursOnClose: task.totalLeadTimeHoursOnClose ?? null,

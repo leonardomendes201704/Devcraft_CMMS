@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.32-kanban-closed-sort-updated] - 2026-04-17
+
+### Changed
+- `KanbanTaskResponse` / cliente: expoe `updatedAtUtc` (ja persistido em `AuditableTenantEntity`).
+- `KanbanPage`: na coluna **Closed**, cards ordenados por **ultima atualizacao** descendente (`updatedAtUtc`), com fallback para `closedAtUtc` e depois `createdAtUtc`.
+
 ## [0.1.31-tenant-isolation-regression] - 2026-04-17
 
 ### Added

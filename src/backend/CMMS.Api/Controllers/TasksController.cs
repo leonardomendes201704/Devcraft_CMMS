@@ -494,6 +494,7 @@ public sealed record KanbanTaskResponse(
     decimal SpentHours,
     string Status,
     DateTime CreatedAtUtc,
+    DateTime? UpdatedAtUtc,
     DateTime? ClosedAtUtc,
     decimal? TotalSpentHoursOnClose,
     decimal? TotalLeadTimeHoursOnClose,
@@ -504,6 +505,9 @@ public static class KanbanTaskMappings
     public static KanbanTaskResponse ToResponse(this KanbanTask task)
     {
         var createdAtUtc = DateTime.SpecifyKind(task.CreatedAtUtc, DateTimeKind.Utc);
+        var updatedAtUtc = task.UpdatedAtUtc.HasValue
+            ? DateTime.SpecifyKind(task.UpdatedAtUtc.Value, DateTimeKind.Utc)
+            : (DateTime?)null;
         var closedAtUtc = task.ClosedAtUtc.HasValue
             ? DateTime.SpecifyKind(task.ClosedAtUtc.Value, DateTimeKind.Utc)
             : (DateTime?)null;
@@ -530,6 +534,7 @@ public static class KanbanTaskMappings
             task.SpentHours,
             task.Status,
             createdAtUtc,
+            updatedAtUtc,
             closedAtUtc,
             task.TotalSpentHoursOnClose,
             task.TotalLeadTimeHoursOnClose,
