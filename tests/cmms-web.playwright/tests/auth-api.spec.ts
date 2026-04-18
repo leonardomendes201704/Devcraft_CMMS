@@ -125,6 +125,77 @@ test('policy guard denies anonymous and allows admin_master for protected endpoi
   expect(protectedResponse.ok()).toBeTruthy()
 })
 
+test('technician JWT is denied for AdminMasterOnly endpoints (403)', async ({ request }) => {
+  const masterLogin = await request.post(`${apiBaseUrl}/api/auth/login`, {
+    headers: {
+      'X-Tenant-Id': tenantId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      email: 'admin@cmms.local',
+      password: 'Naotemsenha0(',
+    },
+  })
+  expect(masterLogin.ok()).toBeTruthy()
+  const masterBody = (await masterLogin.json()) as { accessToken: string }
+  const masterHeaders = {
+    Authorization: `Bearer ${masterBody.accessToken}`,
+    'X-Tenant-Id': tenantId,
+    'Content-Type': 'application/json',
+  }
+
+  const techEmail = `tech.integ.${Date.now()}@cmms.local`
+  const createRes = await request.post(`${apiBaseUrl}/api/auth/users`, {
+    headers: masterHeaders,
+    data: {
+      email: techEmail,
+      password: 'TechIntegPassw0rd!',
+      role: 'technician',
+      isActive: true,
+      profile: {
+        fullName: 'Integration Technician',
+        displayName: 'Tech',
+        locale: 'pt-BR',
+        timeZone: 'America/Sao_Paulo',
+        metadataJson: '{}',
+      },
+    },
+  })
+  expect(createRes.ok()).toBeTruthy()
+
+  const techLogin = await request.post(`${apiBaseUrl}/api/auth/login`, {
+    headers: {
+      'X-Tenant-Id': tenantId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      email: techEmail,
+      password: 'TechIntegPassw0rd!',
+    },
+  })
+  expect(techLogin.ok()).toBeTruthy()
+  const techBody = (await techLogin.json()) as { accessToken: string; user: { role: string } }
+  expect(techBody.user.role).toBe('technician')
+
+  const denied = await request.get(`${apiBaseUrl}/api/tasks`, {
+    headers: {
+      Authorization: `Bearer ${techBody.accessToken}`,
+      'X-Tenant-Id': tenantId,
+    },
+  })
+  expect(denied.status()).toBe(403)
+})
+
+test('malformed bearer token is denied for protected endpoints (401)', async ({ request }) => {
+  const res = await request.get(`${apiBaseUrl}/api/tasks`, {
+    headers: {
+      Authorization: 'Bearer not-a-real-jwt-token',
+      'X-Tenant-Id': tenantId,
+    },
+  })
+  expect(res.status()).toBe(401)
+})
+
 test('admin_master can manage users in tenant scope', async ({ request }) => {
   const loginResponse = await request.post(`${apiBaseUrl}/api/auth/login`, {
     headers: {

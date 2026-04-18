@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.30-auth-api-allow-deny] - 2026-04-17
+
+### Added
+- `tests/cmms-web.playwright/tests/auth-api.spec.ts`: cenarios de integracao allow/deny — usuario `technician` com JWT valido recebe **403** em `GET /api/tasks` (policy `AdminMasterOnly`); `Authorization: Bearer` com token invalido recebe **401**.
+
+Kanban task: `7b27e5d5-407f-4472-a272-caaebea62905` (`[TASK] Integration tests for allow and deny scenarios`), start: `2026-04-17 21:36:23 -03:00`, end: `2026-04-17 21:37:00 -03:00`, spent final: `0.5h`, evidencia api (resumo Playwright 8 testes passando).
+
 ## [0.1.29-master-admin-bootstrap-retro-close] - 2026-04-17
 
 ### Changed
